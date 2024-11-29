@@ -1,0 +1,71 @@
+<?php
+
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ModuloController;
+use App\Http\Controllers\Margem\MargemController;
+
+use Illuminate\Support\Facades\Route;
+
+use App\Http\Middleware\AdminMiddleware;
+
+
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy'); 
+
+    // Exibir o formulário de criação de um novo tipo de usuário
+    Route::get('roles/create', [RoleController::class, 'create'])->name('roles.create');
+
+    // Processar o envio do formulário para armazenar o novo tipo de usuário
+    Route::post('roles', [RoleController::class, 'store'])->name('roles.store');
+
+    Route::middleware([AdminMiddleware::class])->group(function () {
+        // Rota para exibir o formulário de criação de usuários
+        Route::get('create-user', [UserController::class, 'create'])->name('user.create');
+    
+        // Rota para processar o formulário de criação de usuários
+        Route::post('create-user', [UserController::class, 'store'])->name('user.store');
+
+        Route::get('modulos/create', [ModuloController::class, 'create'])->name('modulos.create');
+        Route::post('modulos', [ModuloController::class, 'store'])->name('modulos.store');
+        Route::get('modulos/assign', [ModuloController::class, 'assign'])->name('modulos.assign');
+        Route::post('modulos/assign', [ModuloController::class, 'storeAssignment'])->name('modulos.storeAssignment');
+    
+    });
+
+    //Modulos
+    Route::prefix('margem')->name('margem.')->group(function () {
+
+         // Rota para exibir o painel geral de funções dentro do módulo "Margem"
+        Route::get('index', [MargemController::class, 'index'])->name('index');
+
+        // Rota para exibir o formulário de criação de categoria
+        Route::get('create-categoria', [MargemController::class, 'createCategoria'])->name('create_categoria');
+
+        // Rota para armazenar a categoria criada
+        Route::post('store-categoria', [MargemController::class, 'storeCategoria'])->name('store_categoria');
+
+        // Rota para exibir o formulário de criação de faixas de preço
+        Route::get('create-faixa', [MargemController::class, 'createFaixa'])->name('create_faixa');
+
+        // Rota para armazenar a faixa de preço criada
+        Route::post('store-faixa', [MargemController::class, 'storeFaixa'])->name('store_faixa');
+
+        // Rota para calcular o preço baseado na faixa e na margem
+        Route::post('calcular-preco', [MargemController::class, 'calcularPreco'])->name('calcular_preco');
+    });
+
+    
+});
+
+
+
+require __DIR__.'/auth.php';
