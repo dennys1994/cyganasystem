@@ -4,25 +4,37 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Modulo; // Modelo da tabela modulos
+use App\Models\ModuloUser; // Modelo da tabela user_modulos
 
 class CheckModuleAccess
 {
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string  $module
+     * @return mixed
+     */
     public function handle(Request $request, Closure $next, $module)
     {
-        $user = Auth::user(); // Obtém o usuário autenticado
+        // Verificar se o usuário está autenticado
+        $user = auth()->user();
 
-        // Verifica se o usuário tem acesso direto ao módulo
-        $hasDirectAccess = $user->modules()->where('name', $module)->exists();
+        // Verificar se o usuário tem o acesso ao módulo usando o nome do módulo
+        $hasAccess = ModuloUser::where('user_id', $user->id)
+        ->whereHas('modulo', function ($query) use ($module) {
+            $query->where('nome', $module);  // Aqui você verifica o nome do módulo
+        })
+        ->exists();
 
-        // Verifica se o módulo pertence ao setor/tipo de usuário
-        $hasSectorAccess = $user->sector->modules()->where('name', $module)->exists();
-
-        if ($hasDirectAccess || $hasSectorAccess) {
-            return $next($request);
+        if (!$hasAccess) {
+            // Redirecionar ou lançar erro caso não tenha permissão
+            return redirect()->route('dashboard')->with('error', 'Você não tem permissão para acessar este módulo.');
         }
 
-        // Caso não tenha permissão, retorna um erro ou redireciona
-        return response()->json(['error' => 'Acesso negado ao módulo.'], 403);
+        return $next($request);
     }
 }

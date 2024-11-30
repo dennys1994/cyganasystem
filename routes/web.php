@@ -9,7 +9,7 @@ use App\Http\Controllers\Margem\MargemController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Middleware\AdminMiddleware;
-
+use App\Http\Middleware\CheckModuleAccess;
 
 
 Route::get('/dashboard', function () {
@@ -42,25 +42,37 @@ Route::middleware('auth')->group(function () {
     });
 
     //Modulos
-    Route::prefix('margem')->name('margem.')->group(function () {
+    Route::middleware([CheckModuleAccess::class . ':Margem'])->group(function () {
+        Route::prefix('margem')->name('margem.')->group(function () {
 
-         // Rota para exibir o painel geral de funções dentro do módulo "Margem"
-        Route::get('index', [MargemController::class, 'index'])->name('index');
+            // Rota para exibir o painel geral de funções dentro do módulo "Margem"
+            Route::get('index', [MargemController::class, 'index'])->name('index');
 
-        // Rota para exibir o formulário de criação de categoria
-        Route::get('create-categoria', [MargemController::class, 'createCategoria'])->name('create_categoria');
+            // Rota para exibir o formulário de criação de categoria
+            Route::get('create-categoria', [MargemController::class, 'createCategoria'])->name('create_categoria');
+            // Rota para armazenar a categoria criada
+            Route::post('store-categoria', [MargemController::class, 'storeCategoria'])->name('store_categoria');
+            // Rota para editar categoria
+            Route::get('categorias/{id}/editar', [MargemController::class, 'edit'])->name('categorias.editar');
+            // Rota para atualizar categoria
+            Route::post('categorias/{id}/atualizar', [MargemController::class, 'update'])->name('categorias.atualizar');
+            Route::get('/categorias', [MargemController::class, 'index_categorias'])->name('categorias.index');
 
-        // Rota para armazenar a categoria criada
-        Route::post('store-categoria', [MargemController::class, 'storeCategoria'])->name('store_categoria');
 
-        // Rota para exibir o formulário de criação de faixas de preço
-        Route::get('create-faixa', [MargemController::class, 'createFaixa'])->name('create_faixa');
+            // Rota para exibir o formulário de criação de faixas de preço
+            Route::get('create-faixa', [MargemController::class, 'createFaixa'])->name('create_faixa');
+            // Rota para armazenar a faixa de preço criada
+            Route::post('store-faixa', [MargemController::class, 'storeFaixa'])->name('store_faixa');
+            Route::get('/faixas', [MargemController::class, 'faixas_index'])->name('faixas.index');
+            Route::get('/faixas/{id}/editar', [MargemController::class, 'faixas_edit'])->name('faixas.editar');
+            Route::post('/faixas/{id}/atualizar', [MargemController::class, 'faixas_update'])->name('faixas.atualizar');
 
-        // Rota para armazenar a faixa de preço criada
-        Route::post('store-faixa', [MargemController::class, 'storeFaixa'])->name('store_faixa');
 
-        // Rota para calcular o preço baseado na faixa e na margem
-        Route::post('calcular-preco', [MargemController::class, 'calcularPreco'])->name('calcular_preco');
+            // Rota para calcular o preço baseado na faixa e na margem
+            Route::post('calcular-preco', [MargemController::class, 'calcularPreco'])->name('calcular_preco');
+            // Rota para exibir a view de cálculo de preço
+            Route::get('calcular-preco', [MargemController::class, 'showCalcularPreco'])->name('calcular_preco_view');
+        });
     });
 
     

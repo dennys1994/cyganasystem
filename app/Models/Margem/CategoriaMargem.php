@@ -13,7 +13,7 @@ class CategoriaMargem extends Model
 
     protected $table = 'categorias_margem';
 
-    protected $fillable = ['nome', 'descricao'];
+    protected $fillable = ['nome', 'descricao', 'maodeobra_fixo',];
 
     public function faixasPreco()
     {
