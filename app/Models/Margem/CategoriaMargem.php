@@ -15,8 +15,8 @@ class CategoriaMargem extends Model
 
     protected $fillable = ['nome', 'descricao'];
 
-    public function tabelasMargem()
+    public function faixasPreco()
     {
-        return $this->hasMany(TabelaMargem::class);
+        return $this->hasMany(FaixaPreco::class);
     }
 }
