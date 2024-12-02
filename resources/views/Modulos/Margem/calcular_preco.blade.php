@@ -73,10 +73,17 @@
          @if (isset($resultados))
             <div class="mt-8 p-6 bg-gray-700 text-gray-200 rounded-md shadow-md">
                 <h2 class="text-xl font-bold mb-4">Resultados</h2>
+                <p><strong>Custo:</strong> R$ {{ $resultados['custo'] }}</p>
                 <p><strong>Venda à Vista:</strong> R$ {{ $resultados['avista'] }}</p>
-                <p><strong>Venda Parcelado:</strong> R$ {{ $resultados['parcelado'] }}</p>
+                <p><strong>Venda Parcelado:</strong> 10 x R$ {{ $resultados['parcelado'] }}</p>
                 <p><strong>Margem:</strong> R$ {{ $resultados['margem'] }}</p>
                 <p><strong>Margem Percentual:</strong> {{ $resultados['margem_percentual'] }}%</p>
+                <div class="mt-4 text-center">
+                    <p class="text-lg font-semibold text-red-400">Desconto Especial? Só apertar o botão!</p>
+                    <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="mt-4 inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
+                        Aplicar Desconto
+                    </a>
+                </div>
             </div>
         @endif
 

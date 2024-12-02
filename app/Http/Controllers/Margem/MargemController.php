@@ -81,19 +81,31 @@ class MargemController extends Controller
         $faixas = FaixaPreco::where('categoria_id', $categoriaId)->get();
         foreach ($faixas as $faixa) { 
             if ($faixa->min < $custo && $custo <= $faixa->max) {
-                $porc_avista = $faixa->avista/100;
-                $porc_parcelado = $faixa->parcelado/100;
+                $porc_avista = (100-$faixa->avista)/100;
+                $porc_parcelado = (100-$faixa->parcelado)/100;
                 $categoria = CategoriaMargem::find($categoriaId);
                 $maodeobraFixo = $categoria->maodeobra_fixo;
 
                 $avista = ($custo / $porc_avista ) + $frete + $maodeobraFixo;
-                $parcelado = $avista / $porc_parcelado;
+                
+
+                if ($avista - floor($avista) < 5) {
+                    // Se a parte decimal for menor que 0.5, arredonda para a dezena inferior e coloca 9,90 na unidade
+                    $avista = floor($avista / 10) * 10 -0.10;  // Arredonda para baixo
+                } else {
+                    // Se a parte decimal for maior ou igual a 0.5, arredonda para a dezena superior e coloca 9,90 na unidade
+                    $avista = ceil($avista/10) * 10 - 0.10;  // Arredonda para cima
+                }
+                
+
+                $parcelado = ($avista / $porc_parcelado)/10;
                 $margem = $avista - ($frete + $custo) - (0.03 * $avista);
                 $margemPorcentagem = ((($custo / ($custo + $margem)) - 1) * -100);
                 
                 return view('modulos.margem.calcular_preco', [
                     'categorias' => CategoriaMargem::all(),
                     'resultados' => [
+                        'custo' => number_format($custo, 2, ',', '.'),
                         'avista' => number_format($avista, 2, ',', '.'),
                         'parcelado' => number_format($parcelado, 2, ',', '.'),
                         'margem' => number_format($margem, 2, ',', '.'),
