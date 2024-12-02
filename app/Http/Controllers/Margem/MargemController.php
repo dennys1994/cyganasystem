@@ -89,7 +89,7 @@ class MargemController extends Controller
                 $avista = ($custo / $porc_avista ) + $frete + $maodeobraFixo;
                 
 
-                if ($avista - floor($avista) < 5) {
+                if ($avista % 10 < 5) {
                     // Se a parte decimal for menor que 0.5, arredonda para a dezena inferior e coloca 9,90 na unidade
                     $avista = floor($avista / 10) * 10 -0.10;  // Arredonda para baixo
                 } else {

@@ -83,9 +83,14 @@
                     <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="mt-4 inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
                         Aplicar Desconto
                     </a>
-                </div>
+                </div>              
             </div>
         @endif
-
+        <a href="{{route('margem.index')}}"
+            class="inline-block w-full max-w-xs py-3 px-6 text-center text-white font-semibold bg-blue-600 rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all duration-300 ease-in-out"
+            style="margin-top: 10px;">
+                {{ __('Voltar') }}
+        </a>
+    
     </div>
 </x-app-layout>
