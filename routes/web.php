@@ -42,6 +42,12 @@ Route::middleware('auth')->group(function () {
 
         //Rota Relatorio de fechamento        
         Route::prefix('relatorio-fechamento')->group(function () {
+            //Rota com as funcoes principais do relatorio 
+            Route::get('/relatorio-fechamento', function () {
+                return view('Modulos.RelatorioFechamento.index');
+            })->name('relatorio');
+
+            //Cadastro, edicao e listagem das credenciais 
             Route::post('/usuarios', [RelatorioFechamentoController::class, 'storeUser'])->name('relatorio.create.user'); // Criar usuário
             Route::get('/usuarios', [RelatorioFechamentoController::class, 'listUsers'])->name('relatorio.users.list'); // Listar usuários    
 
@@ -61,12 +67,20 @@ Route::middleware('auth')->group(function () {
 
             Route::get('/usuarios-store', function () {
                 return view('Modulos.RelatorioFechamento.Users.store');
-            })->name('relatorio.users.store');
+            })->name('relatorio.users.store');            
 
+            //funções da geração do relatorio
+            Route::get('/relatorio', function () {
+                return view('Modulos.RelatorioFechamento.Relatorio.index');
+            })->name('relatorio.index'); 
 
-            Route::get('/relatorio-fechamento', function () {
-                return view('Modulos.RelatorioFechamento.index');
-            })->name('relatorio');
+            //listar clientes
+            Route::get('/clientes', [RelatorioFechamentoController::class, 'getClientes'])->name('relatorio.clientes');
+            //listar ordens de serviço
+            Route::get('/ordens-servico', [RelatorioFechamentoController::class, 'listarOrdensServico'])->name('ordens-servico');
+            //gerar pdf relatorio
+            Route::post('/relatorio/pdf', [RelatorioFechamentoController::class, 'gerarRelatorioPdf'])->name('relatorio.pdf');
+
 
             Route::get('/fechamento', [RelatorioFechamentoController::class, 'getRelatorio']);
         });
