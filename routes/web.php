@@ -5,6 +5,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\Margem\MargemController;
+use App\Http\Controllers\Modulos\RelatorioFechamentoController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,30 @@ Route::middleware('auth')->group(function () {
         Route::post('modulos', [ModuloController::class, 'store'])->name('modulos.store');
         Route::get('modulos/assign', [ModuloController::class, 'assign'])->name('modulos.assign');
         Route::post('modulos/assign', [ModuloController::class, 'storeAssignment'])->name('modulos.storeAssignment');
+
+        //Rota Relatorio de fechamento        
+        Route::prefix('relatorio-fechamento')->group(function () {
+            Route::post('/usuarios', [RelatorioFechamentoController::class, 'storeUser'])->name('relatorio.create.user'); // Criar usuário
+            Route::get('/usuarios', [RelatorioFechamentoController::class, 'listUsers'])->name('relatorio.users.list'); // Listar usuários
+            Route::put('/usuarios/{id}', [RelatorioFechamentoController::class, 'updateUser']); // Atualizar usuário
+            Route::delete('/usuarios/{id}', [RelatorioFechamentoController::class, 'deleteUser']); // Excluir usuário
+
+            Route::get('/usuarios-index', function () {
+                return view('Modulos.RelatorioFechamento.Users.index');
+            })->name('relatorio.users.index');
+
+            Route::get('/usuarios-store', function () {
+                return view('Modulos.RelatorioFechamento.Users.store');
+            })->name('relatorio.users.store');
+
+
+            Route::get('/relatorio-fechamento', function () {
+                return view('Modulos.RelatorioFechamento.index');
+            })->name('relatorio');
+
+            Route::get('/fechamento', [RelatorioFechamentoController::class, 'getRelatorio']);
+        });
+
     
     });
 

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Modulo; // Modelo da tabela modulos
 use App\Models\ModuloUser; // Modelo da tabela user_modulos
