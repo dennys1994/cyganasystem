@@ -64,16 +64,16 @@ class RelatorioFechamentoController extends Controller
         RelatorioUser::create($validatedData);
 
         // Redirecionar com uma mensagem de sucesso
-        return redirect()->route('relatorio.users.list')->with('success', 'Usuário criado com sucesso!');
+        return redirect()->route('relatorio.users.list')->with('success', 'Credencial criada com sucesso!');
     }
 
 
     // Listar todos os usuários
     public function listUsers()
     {
-        $users = RelatorioUser::all();
+        $relatorioUsers = RelatorioUser::all();
 
-        return response()->json($users);
+        return view('Modulos.RelatorioFechamento.Users.list', compact('relatorioUsers'));
     }
 
     // Atualizar usuário
@@ -82,7 +82,7 @@ class RelatorioFechamentoController extends Controller
         $user = RelatorioUser::find($id);
 
         if (!$user) {
-            return response()->json(['error' => 'Usuário não encontrado'], 404);
+            return response()->json(['error' => 'Credencial não encontrado'], 404);
         }
 
         $request->validate([
@@ -95,20 +95,21 @@ class RelatorioFechamentoController extends Controller
 
         $user->update($request->all());
 
-        return response()->json(['message' => 'Usuário atualizado com sucesso!', 'user' => $user]);
+        return redirect()->route('relatorio.users.list')->with('success', 'Credenciais atualizado com sucesso!');
     }
 
-    // Excluir usuário
-    public function deleteUser($id)
+    // Exibir o formulário de edição (editar credenciais)
+    public function editUser($id)
     {
-        $user = RelatorioUser::find($id);
+        $user = RelatorioUser::findOrFail($id);
+        return view('Modulos.RelatorioFechamento.Users.edit', compact('user'));
+    }
 
-        if (!$user) {
-            return response()->json(['error' => 'Usuário não encontrado'], 404);
-        }
-
+    // Excluir o usuário
+    public function destroyUser($id)
+    {
+        $user = RelatorioUser::findOrFail($id);
         $user->delete();
-
-        return response()->json(['message' => 'Usuário excluído com sucesso!']);
+        return redirect()->route('relatorio.users')->with('success', 'Credenciais excluídas com sucesso!');
     }
 }

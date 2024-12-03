@@ -43,9 +43,17 @@ Route::middleware('auth')->group(function () {
         //Rota Relatorio de fechamento        
         Route::prefix('relatorio-fechamento')->group(function () {
             Route::post('/usuarios', [RelatorioFechamentoController::class, 'storeUser'])->name('relatorio.create.user'); // Criar usuário
-            Route::get('/usuarios', [RelatorioFechamentoController::class, 'listUsers'])->name('relatorio.users.list'); // Listar usuários
-            Route::put('/usuarios/{id}', [RelatorioFechamentoController::class, 'updateUser']); // Atualizar usuário
-            Route::delete('/usuarios/{id}', [RelatorioFechamentoController::class, 'deleteUser']); // Excluir usuário
+            Route::get('/usuarios', [RelatorioFechamentoController::class, 'listUsers'])->name('relatorio.users.list'); // Listar usuários    
+
+             // Rota para exibir o formulário de edição de um usuário
+            Route::get('/usuarios/{id}/edit', [RelatorioFechamentoController::class, 'editUser'])->name('relatorio.users.edit');
+            
+            // Rota para atualizar um usuário no banco de dados
+            Route::put('/usuarios/{id}', [RelatorioFechamentoController::class, 'updateUser'])->name('relatorio.users.update');
+            
+            // Rota para excluir um usuário
+            Route::delete('/usuarios/{id}', [RelatorioFechamentoController::class, 'deleteUser'])->name('relatorio.users.destroy');
+
 
             Route::get('/usuarios-index', function () {
                 return view('Modulos.RelatorioFechamento.Users.index');
