@@ -46,7 +46,11 @@
                     <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border rounded-e-0 border-gray-300 border-e-0 rounded-s-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
                         R$
                     </span>
-                    <input type="number" id="preco_custo" name="preco_custo" class="rounded-none rounded-e-lg bg-gray-50 border text-gray-900 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm border-gray-300 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <input type="text" 
+                    id="preco_custo" 
+                    name="preco_custo" 
+                    class="rounded-none rounded-e-lg bg-gray-50 border text-gray-900 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm border-gray-300 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                    placeholder="Digite o preço (ponto ou vírgula)">                          
                 </div>
             </div>
 
@@ -75,7 +79,7 @@
                 <h2 class="text-xl font-bold mb-4">Resultados</h2>
                 <p><strong>Custo:</strong> R$ {{ $resultados['custo'] }}</p>
                 <p><strong>Venda à Vista:</strong> R$ {{ $resultados['avista'] }}</p>
-                <p><strong>Venda Parcelado:</strong> 10 x R$ {{ $resultados['parcelado'] }}</p>
+                <p><strong>Venda Parcelado:</strong> 10 x R$ {{ $resultados['parcelado'] }} ({{$resultados['parcelado_cheio']}})</p>
                 <p><strong>Margem:</strong> R$ {{ $resultados['margem'] }}</p>
                 <p><strong>Margem Percentual:</strong> {{ $resultados['margem_percentual'] }}%</p>
                 <div class="mt-4 text-center">
@@ -93,4 +97,27 @@
         </a>
     
     </div>
+    <script>
+        const inputPrecoCusto = document.getElementById('preco_custo');
+    
+        inputPrecoCusto.addEventListener('input', (e) => {
+            // Substitui vírgulas por pontos para uniformizar o formato decimal
+            const valor = e.target.value.replace(',', '.');
+            
+            // Permite apenas números e um único ponto decimal
+            if (!/^\d*\.?\d*$/.test(valor)) {
+                e.target.value = e.target.value.slice(0, -1);
+            } else {
+                e.target.value = valor;
+            }
+        });
+    
+        inputPrecoCusto.addEventListener('blur', (e) => {
+            // Conversão de número para o formato correto, se necessário
+            const valor = parseFloat(e.target.value);
+            if (!isNaN(valor)) {
+                e.target.value = valor.toFixed(2); // Formato com 2 casas decimais
+            }
+        });
+    </script>
 </x-app-layout>

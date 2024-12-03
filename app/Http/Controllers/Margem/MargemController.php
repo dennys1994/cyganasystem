@@ -98,7 +98,13 @@ class MargemController extends Controller
                 }
                 
 
-                $parcelado = ($avista / $porc_parcelado)/10;
+                $parcelado = ($avista / $porc_parcelado);
+                            
+                $parcelado = ceil($parcelado/10) * 10 - 0.10;  // Arredonda para cima
+                
+                $parcelado_cheio = $parcelado;
+                $parcelado = $parcelado / 10;
+
                 $margem = $avista - ($frete + $custo) - (0.03 * $avista);
                 $margemPorcentagem = ((($custo / ($custo + $margem)) - 1) * -100);
                 
@@ -108,6 +114,7 @@ class MargemController extends Controller
                         'custo' => number_format($custo, 2, ',', '.'),
                         'avista' => number_format($avista, 2, ',', '.'),
                         'parcelado' => number_format($parcelado, 2, ',', '.'),
+                        'parcelado_cheio' => number_format($parcelado_cheio, 2, ',', '.'),
                         'margem' => number_format($margem, 2, ',', '.'),
                         'margem_percentual' => number_format($margemPorcentagem, 2, ',', '.'),
                     ],
