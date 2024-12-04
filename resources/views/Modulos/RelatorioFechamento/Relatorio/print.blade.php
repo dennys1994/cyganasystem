@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório de Ordens de Serviço</title>
     <style>
+        @page {
+        margin: 0; /* Remove as margens do DomPDF */
+        }
         body {
-            background: url() no-repeat center center;
+            margin: 0; /* Remove as margens no CSS */
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: url({{public_path('img/timbrado/timbradocolor.jpg')}}) no-repeat center center;
             background-size: cover;
             margin: 0;
             padding: 0;
@@ -29,19 +36,26 @@
         h1 {
             font-size: 2rem;
             text-align: center;
-            margin-bottom: 30px;
+            margin: 60px 0;
         }
 
         .titulo {
             font-weight: bold;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        .margem{
+            margin-bottom: 120px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Relatório de Ordens de Serviço</h1>
-
-        @foreach($ordensServico as $ordem)
+        @foreach($ordensServico as $index => $ordem)
             <div class="ordem">
                 <h5>Ordem de Serviço - Código: {{ $loop->iteration }}</h5>
                 <div>
@@ -61,7 +75,14 @@
                     <span>{{ $ordem['tecnico'] }}</span>
                 </div>
             </div>
+        
+            {{-- Adiciona a quebra de página a cada 4 itens --}}
+            @if( $loop->iteration  % 4 == 0 && !$loop->last)
+                <div class="page-break"></div>
+                <div class="margem"></div>
+            @endif
         @endforeach
+    
     </div>
 </body>
 </html>

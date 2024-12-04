@@ -81,8 +81,8 @@ Route::middleware('auth')->group(function () {
             //gerar pdf relatorio
             Route::post('/relatorio/pdf', [RelatorioFechamentoController::class, 'gerarRelatorioPdf'])->name('relatorio.pdf');
 
+            Route::post('/limpar-cache', [RelatorioFechamentoController::class, 'limparCache'])->name('limpar.cache');
 
-            Route::get('/fechamento', [RelatorioFechamentoController::class, 'getRelatorio']);
         });
 
     

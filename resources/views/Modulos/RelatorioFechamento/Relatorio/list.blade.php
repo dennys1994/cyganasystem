@@ -7,6 +7,33 @@
                 {{ session('error') }}
             </div>
         @endif
+        @if(session('success'))
+            <div class="text-green-500 text-center mb-4">
+                {{ session('success') }}
+            </div>
+        @endif
+
+            
+        <!-- Botão para Limpar o Cache -->
+        <div class="mb-6">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <!-- Botão Limpar Cache -->
+                <form action="{{ route('limpar.cache') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="bg-red-600 text-white p-2 rounded-md hover:bg-red-700">
+                        Limpar Cache
+                    </button>
+                </form>                        
+                <button id="tooltip-button" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
+                    ?
+                </button>
+            </div>
+            <!-- Tooltip com texto explicativo -->
+            <div id="tooltip-text" class="hidden mt-2 text-gray-500 text-sm">
+                <p><strong>Atenção:</strong> Caso tenha feito alguma alteração nos tickets no Milvus ou em outros dados importantes, é recomendável limpar o cache do sistema para garantir que as atualizações sejam refletidas corretamente no sistema.</p>
+            </div>
+        </div>
+
 
         <!-- Formulário de Busca e Filtros -->
         <div class="mb-6">
@@ -153,5 +180,11 @@
         });
  
     </script>
-
+    <script>
+        // Função para alternar a visibilidade do texto
+        document.getElementById('tooltip-button').addEventListener('click', function() {
+            const tooltipText = document.getElementById('tooltip-text');
+            tooltipText.classList.toggle('hidden'); // Mostra/oculta o texto
+        });
+    </script>
 </x-app-layout>

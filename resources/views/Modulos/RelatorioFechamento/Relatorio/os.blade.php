@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="container mx-auto p-6">
         <h1 class="text-3xl font-bold text-center mb-6 text-gray-300">Ordens de Serviço</h1>
-
+        
         @if(session('error'))
             <div class="text-red-500 text-center mb-4">
                 {{ session('error') }}
@@ -27,7 +27,20 @@
             </button>
         </form>
         
-
+        <div class="bg-gray-100 p-4 mb-4 rounded-md">
+            <h3 class="text-xl font-bold text-gray-800">Resumo de Tempos</h3>
+            <ul class="list-disc pl-6">
+                <li><span class="font-medium">Total de ordens:</span> {{ $totalOrdens }} ordens</li>
+                <li><span class="font-medium">Tempo Nível 1 (N1):</span> {{ $totalTempos['N1'] }} Horas</li>
+                <li><span class="font-medium">Tempo Nível 2 (N2):</span> {{ $totalTempos['N2'] }} Horas</li>
+                <li><span class="font-medium">Tempo Nível 3 (N3):</span> {{ $totalTempos['N3'] }} Horas</li>
+                <li><span class="font-medium">Ordens sem tempo:</span> {{ implode(', ', $totalTempos['Sem Tempo']) }}</li>
+            </ul>
+        </div>
+        
+        
+        
+        
 
         @foreach($ordensServico as $ordem)
         <div class="bg-white shadow-md rounded-lg p-4 mb-4">

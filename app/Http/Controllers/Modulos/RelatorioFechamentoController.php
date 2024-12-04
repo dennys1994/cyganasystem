@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 
 use Carbon\Carbon;
-
+use Dompdf\Dompdf;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class RelatorioFechamentoController extends Controller
@@ -146,26 +146,32 @@ class RelatorioFechamentoController extends Controller
         // Gerar chave única para o lock e cache
         $cacheKey = "ordens_servico_{$clienteId}_{$dataInicio}_{$dataFim}";
 
+        // Inicializar os totais de tempo
+        $totalTempos = [
+            'N1' => 0,
+            'N2' => 0,
+            'N3' => 0,
+            'Sem Tempo' => [],  // Lista para ordens sem tempo
+        ];
+        
         // Verificar se os dados já estão no cache
         if (Cache::has($cacheKey)) {
-            // Se os dados já estiverem no cache, retorne-os diretamente
             $ordensServico = Cache::get($cacheKey);
             return view('Modulos.RelatorioFechamento.Relatorio.os', [
                 'ordensServico' => $ordensServico,
+                'totalTempos' => $totalTempos,
             ]);
         }
 
         // Gerar chave única para o lock para garantir que apenas uma requisição aconteça
         $lockKey = "lock_ordens_servico_{$clienteId}_{$dataInicio}_{$dataFim}";
 
-        // Verificar se já existe um lock ativo
         if (Cache::has($lockKey)) {
-            // Se a requisição já está sendo processada, podemos retornar uma resposta de erro ou esperar
             return back()->with('info', 'Já existe uma requisição em andamento para este cliente e intervalo de datas.');
         }
 
         // Criar o lock para essa requisição
-        Cache::put($lockKey, true, 5); // O lock dura 5 minutos (ajuste conforme necessário)
+        Cache::put($lockKey, true, 5);
 
         try {
             // Fazer a requisição para a API
@@ -187,38 +193,91 @@ class RelatorioFechamentoController extends Controller
                 return back()->with('error', 'Erro ao obter ordens de serviço da API.');
             }
 
-            $ordensServico = $response->json();
+            $ordensServico = $response->json()['lista'] ?? [];
 
-            // Armazenar o resultado no cache por 10 minutos
-            Cache::put($cacheKey, $ordensServico['lista'] ?? [], 600);
+            // Calcular tempos por nível
+            foreach ($ordensServico as &$ordem) {
+                if (isset($ordem['servico_realizado'])) {
+                    // A expressão regular para capturar o tempo e o nível
+                    preg_match_all('/(\d+)\s*(h|hr|min|minutos|m)\s*(n1|n2|n3)/i', $ordem['servico_realizado'], $matches, PREG_SET_ORDER);
+                
+                    // Flag para verificar se algum tempo foi encontrado
+                    $tempoEncontrado = false;
+                
+                    // Percorre todas as correspondências encontradas pela expressão regular
+                    foreach ($matches as $match) {
+                        // Captura o tempo, unidade e nível
+                        $tempo = (int)$match[1];
+                        $unidade = strtolower($match[2]); // converte a unidade para minúscula
+                        $nivel = strtoupper($match[3]);  // converte o nível para maiúscula
+                
+                        // Verifica se a unidade é hora e converte para minutos, caso contrário, mantém em minutos
+                        $minutos = ($unidade === 'h' || $unidade === 'hr') ? $tempo * 60 : $tempo;
+                
+                        // Soma o tempo ao nível correspondente
+                        $totalTempos[$nivel] += $minutos/60;
+                
+                        // Se encontrou um tempo, marca a flag como true
+                        $tempoEncontrado = true;
+                    }
+                
+                    // Se não foi encontrado nenhum tempo (se a flag não foi ativada)
+                    if (!$tempoEncontrado) {
+                        // Adiciona o código da ordem à lista de "Sem Tempo"
+                        $totalTempos['Sem Tempo'][] = $ordem['codigo'];
+                    }
+                }                
+            }
+            $totalOrdens = count($ordensServico);
+            // Cachear os resultados
+            Cache::put($cacheKey, $ordensServico, 600);
 
-            // Retornar para a view com as ordens
             return view('Modulos.RelatorioFechamento.Relatorio.os', [
-                'ordensServico' => $ordensServico['lista'] ?? [],
+                'ordensServico' => $ordensServico,
+                'totalTempos' => $totalTempos,
+                'totalOrdens' => $totalOrdens,
             ]);
         } catch (\Exception $e) {
-            // Retornar uma mensagem de erro mais detalhada
             return back()->with('error', 'Erro ao processar a requisição: ' . $e->getMessage());
         } finally {
-            // Remover o lock após o processamento
             Cache::forget($lockKey);
         }
     }
 
+
+
     public function gerarRelatorioPdf(Request $request)
     {
         $ordensServico = json_decode($request->input('ordensServico'), true);
+
+        // Cálculo de tempos
+        $totalTempos = [
+            'N1' => 0,
+            'N2' => 0,
+            'N3' => 0,
+        ];
 
         if (!$ordensServico) {
             return redirect()->back()->with('error', 'Nenhuma ordem de serviço encontrada para exportar.');
         }
 
         // Gere o PDF com as ordens de serviço (exemplo usando Dompdf)
-        $pdf = PDF::loadView('Modulos.RelatorioFechamento.Relatorio.print', compact('ordensServico'))->setPaper('a4', 'portrait');
+        $pdf = PDF::loadView('Modulos.RelatorioFechamento.Relatorio.print', compact('ordensServico'))
+        ->setPaper('a4', 'portrait');
      
         return $pdf->stream('relatorio_ordens.pdf');
         
     }
+
+    public function limparCache()
+    {
+        // Limpar todo o cache
+        Cache::flush();
+
+        // Retorne com uma mensagem de sucesso
+        return redirect()->back()->with('success', 'Todo o cache foi limpo com sucesso!');
+    }
+
 
 
 }
