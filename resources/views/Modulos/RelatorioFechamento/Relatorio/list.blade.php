@@ -69,14 +69,13 @@
                             <td class="px-4 py-2 text-gray-300">
                                 <!-- Botão para abrir o modal -->
                                 <a  href="#" 
-                                    onclick="openModal({{ $cliente['id'] }})"
+                                    onclick="openModal({{ $cliente['id'] }}, '{{ $cliente['cnpj_cpf'] }}')"
                                     class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center space-x-2">
-                                    <!-- Ícone de ticket -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 w-5 h-5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-                                    </svg>
-                                    <!-- Texto do botão -->
-                                    <span>Ver Tickets</span>
+                                        <!-- Ícone de ticket -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 w-5 h-5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                                        </svg>
+                                        <span>Ver Tickets</span>
                                 </a>
 
                             </td>
@@ -115,31 +114,40 @@
         </div>
     </div>
 
-    <script>
-        // Function to open the modal
-        function openModal(clienteId) {
-            document.getElementById('modal').classList.remove('hidden');
-            window.clienteId = clienteId;  // Store clienteId for later use
-        }
-
+    <script>        
         // Function to close the modal
         function closeModal() {
             document.getElementById('modal').classList.add('hidden');
         }
 
-        // Function to apply date range and redirect
+        // Função para abrir o modal e armazenar o CNPJ
+        function openModal(clienteId, cnpj) {
+            document.getElementById('modal').classList.remove('hidden');
+            window.clienteId = clienteId;  // Armazena o clienteId para uso posterior
+            window.cnpj = cnpj;  // Armazena o CNPJ para uso posterior
+        }
+
+        // Função para aplicar o intervalo de datas e redirecionar
         function applyDateRange() {
             const dataInicial = document.getElementById('data-inicial').value;
             const dataFinal = document.getElementById('data-final').value;
 
             if (dataInicial && dataFinal) {
-                const baseUrl = `{{ route('ordens-servico', ['cliente_id' => '__clienteId__']) }}`.replace('__clienteId__', window.clienteId);
-                const urlWithDates = `${baseUrl}&data_inicial=${dataInicial}&data_final=${dataFinal}`;
-                window.location.href = urlWithDates;
+                 // Construindo a URL corretamente com todos os parâmetros
+                const baseUrl = `{{ route('ordens-servico', ['cliente_id' => '__clienteId__', 'cnpj' => '__cnpj__']) }}`
+                    .replace('__clienteId__', window.clienteId)
+                    .replace('__cnpj__', window.cnpj);
+
+                // Acrescentando os parâmetros de data na URL
+                const urlWithDates = `${baseUrl}?data_inicial=${dataInicial}&data_final=${dataFinal}`;
+
+        // Redirecionando para a URL
+        window.location.href = urlWithDates;
             } else {
                 alert('Por favor, selecione as datas inicial e final.');
             }
         }
+
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {

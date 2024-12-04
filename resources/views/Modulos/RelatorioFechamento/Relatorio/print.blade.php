@@ -3,18 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Ordens de Serviço</title>
+    <title>Relatório de Ordens e Pedidos</title>
     <style>
         @page {
-        margin: 0; /* Remove as margens do DomPDF */
+            margin: 0; /* Margem da página */
         }
+
         body {
-            margin: 0; /* Remove as margens no CSS */
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background: url({{public_path('img/timbrado/timbradocolor.jpg')}}) no-repeat center center;
-            background-size: cover;
+            
+            background: url({{ public_path('img/timbrado/timbradocolor2.jpg') }}) no-repeat top center;
+            background-size: cover; /* Garante que o fundo fique proporcional */
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
@@ -24,19 +22,19 @@
             position: relative;
             z-index: 2;
             padding: 50px;
+            margin: 0px auto; /* Margens no topo e rodapé para o timbrado */
         }
 
-        .ordem {
+        .ordem, .pedido {
             margin-bottom: 20px;
             padding: 10px;
             border: 1px solid #ddd;
-            background: rgba(255, 255, 255, 0.8);
         }
 
         h1 {
             font-size: 2rem;
             text-align: center;
-            margin: 60px 0;
+            margin-bottom: 40px;
         }
 
         .titulo {
@@ -47,42 +45,79 @@
             page-break-after: always;
         }
 
-        .margem{
-            margin-bottom: 120px;
+        .page-content:first-child {
+            margin-top: 50px;
+        }
+
+        .page-content:nth-child(n+2) {
+            margin-top: 50px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Relatório de Ordens de Serviço</h1>
-        @foreach($ordensServico as $index => $ordem)
+        
+        <h1>Relatório de Ordens e Pedidos</h1>
+        
+        <h2>Ordens de Serviço</h2>
+        @foreach($ordensServico as $ordem)
             <div class="ordem">
-                <h5>Ordem de Serviço - Código: {{ $loop->iteration }}</h5>
+                <div><span class="titulo">Data da Solução:</span> {{ $ordem['data_solucao'] }}</div>
+                <div><span class="titulo">Descrição:</span> {{ $ordem['descricao'] }}</div>
+                <div><span class="titulo">Serviço Realizado:</span> {{ $ordem['servico_realizado'] }}</div>
+                <div><span class="titulo">Técnico:</span> {{ $ordem['tecnico'] }}</div>
+            </div>
+        @endforeach
+        
+        <h2>Pedidos (Sigecloud)</h2>
+        @foreach($dadosSigecloud as $pedido)
+            <div class="pedido">
                 <div>
-                    <span class="titulo">Data da Solução:</span> 
-                    <span>{{ $ordem['data_solucao'] }}</span>
+                    <strong>Pedido ID:</strong> {{ $pedido['ID'] }}
                 </div>
                 <div>
-                    <span class="titulo">Descrição:</span> 
-                    <span>{{ $ordem['descricao'] }}</span>
+                    <strong>Cliente:</strong> {{ $pedido['Cliente'] }}
                 </div>
                 <div>
-                    <span class="titulo">Serviço Realizado:</span> 
-                    <span>{{ $ordem['servico_realizado'] }}</span>
+                    <strong>Status:</strong> {{ $pedido['StatusSistema'] }}
                 </div>
                 <div>
-                    <span class="titulo">Técnico:</span> 
-                    <span>{{ $ordem['tecnico'] }}</span>
+                    <strong>Valor Final:</strong> R$ {{ number_format($pedido['ValorFinal'], 2, ',', '.') }}
+                </div>
+
+                <!-- Exibindo os Itens do Pedido -->
+                <div style="margin-top: 10px;">
+                    <strong>Itens do Pedido:</strong>
+                    @if(isset($pedido['Items']) && count($pedido['Items']) > 0)
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: left;">Código</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: left;">Descrição</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center;">Quantidade</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: right;">Valor Unitário</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: right;">Valor Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($pedido['Items'] as $item)
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 5px;">{{ $item['Codigo'] }}</td>
+                                        <td style="border: 1px solid #000; padding: 5px;">{{ $item['Descricao'] }}</td>
+                                        <td style="border: 1px solid #000; padding: 5px; text-align: center;">{{ $item['Quantidade'] }}</td>
+                                        <td style="border: 1px solid #000; padding: 5px; text-align: right;">R$ {{ number_format($item['ValorUnitario'], 2, ',', '.') }}</td>
+                                        <td style="border: 1px solid #000; padding: 5px; text-align: right;">R$ {{ number_format($item['ValorTotal'], 2, ',', '.') }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @else
+                        <p style="margin-top: 5px; font-style: italic;">Nenhum item encontrado para este pedido.</p>
+                    @endif
                 </div>
             </div>
-        
-            {{-- Adiciona a quebra de página a cada 4 itens --}}
-            @if( $loop->iteration  % 4 == 0 && !$loop->last)
-                <div class="page-break"></div>
-                <div class="margem"></div>
-            @endif
         @endforeach
-    
+
     </div>
 </body>
 </html>

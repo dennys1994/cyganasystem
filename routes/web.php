@@ -77,7 +77,7 @@ Route::middleware('auth')->group(function () {
             //listar clientes
             Route::get('/clientes', [RelatorioFechamentoController::class, 'getClientes'])->name('relatorio.clientes');
             //listar ordens de serviço
-            Route::get('/ordens-servico', [RelatorioFechamentoController::class, 'listarOrdensServico'])->name('ordens-servico');
+            Route::get('ordens-servico/{cliente_id}/{cnpj}', [RelatorioFechamentoController::class, 'listarOrdensServico'])->name('ordens-servico');
             //gerar pdf relatorio
             Route::post('/relatorio/pdf', [RelatorioFechamentoController::class, 'gerarRelatorioPdf'])->name('relatorio.pdf');
 

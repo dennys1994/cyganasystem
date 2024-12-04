@@ -111,8 +111,9 @@ class RelatorioFechamentoController extends Controller
        }
     }
 
-    public function listarOrdensServico(Request $request)
+    public function listarOrdensServico(Request $request, $clienteId, $cnpj)
     {
+        
         // Validar se há um usuário com auth_milvus configurado
         $authMilvus = RelatorioUser::whereNotNull('auth_milvus')->first();
 
@@ -121,7 +122,6 @@ class RelatorioFechamentoController extends Controller
         }
 
         // Validar cliente_id
-        $clienteId = $request->input('cliente_id');
         if (!$clienteId) {
             return back()->with('error', 'É necessário selecionar um cliente.');
         }
@@ -129,7 +129,6 @@ class RelatorioFechamentoController extends Controller
         // Obter as datas inicial e final
         $dataInicio = $request->query('data_inicial');
         $dataFim = $request->query('data_final');
-
         // Verificar se as datas foram passadas corretamente
         if (!$dataInicio || !$dataFim) {
             return back()->with('error', 'É necessário selecionar um intervalo de datas.');
@@ -153,7 +152,7 @@ class RelatorioFechamentoController extends Controller
             'N3' => 0,
             'Sem Tempo' => [],  // Lista para ordens sem tempo
         ];
-        
+
         // Verificar se os dados já estão no cache
         if (Cache::has($cacheKey)) {
             $ordensServico = Cache::get($cacheKey);
@@ -174,7 +173,7 @@ class RelatorioFechamentoController extends Controller
         Cache::put($lockKey, true, 5);
 
         try {
-            // Fazer a requisição para a API
+            // Fazer a requisição para a API Milvus (como já está feito)
             $url = 'https://apiintegracao.milvus.com.br/api/chamado/listagem';
             $filtroBody = [
                 "filtro_body" => [
@@ -190,10 +189,46 @@ class RelatorioFechamentoController extends Controller
             ])->post($url, $filtroBody);
 
             if ($response->failed()) {
-                return back()->with('error', 'Erro ao obter ordens de serviço da API.');
+                return back()->with('error', 'Erro ao obter ordens de serviço da API Milvus.');
             }
 
             $ordensServico = $response->json()['lista'] ?? [];
+            
+            // Cachear os resultados
+            Cache::put($cacheKey, $ordensServico, 600);
+
+
+            // Adicionar a chamada à API Sigecloud
+            $authSige = $authMilvus->auth_sige;  // Supondo que a variável auth_sige exista
+            $user = $authMilvus->email;
+            $app = $authMilvus->app_name;
+            $urlSigecloud = 'https://api.sigecloud.com.br/request/Pedidos/Pesquisar';
+
+            // Montando os parâmetros manualmente, sem que os dois pontos sejam escapados
+            $dataInicial = $dataInicio . 'T00:00:00Z';
+            $dataFinal = $dataFim . 'T23:59:59Z';
+
+            // A URL completa que você já montou
+            $urlCompleta = $urlSigecloud . '?cpf_cnpj=' . $cnpj . '&dataInicial=' . $dataInicial . '&dataFinal=' . $dataFinal;
+
+            // Realizando a requisição GET com a URL completa
+            $responseSigecloud = Http::withHeaders([
+                'Authorization-Token' => $authSige,
+                'User' => $user,
+                'App' => $app
+            ])->get($urlCompleta);  // Usando a URL completa aqui
+
+            // Verificando se a requisição falhou
+            if ($responseSigecloud->failed()) {
+                return back()->with('error', 'Erro ao obter dados da API Sigecloud.');
+            }
+
+            // Processando os dados retornados
+            $dadosSigecloud = $responseSigecloud->json() ?? [];
+
+            // Cachear os resultados
+            Cache::put($cacheKey, $ordensServico, 600);
+
 
             // Calcular tempos por nível
             foreach ($ordensServico as &$ordem) {
@@ -229,14 +264,15 @@ class RelatorioFechamentoController extends Controller
                 }                
             }
             $totalOrdens = count($ordensServico);
-            // Cachear os resultados
-            Cache::put($cacheKey, $ordensServico, 600);
+
 
             return view('Modulos.RelatorioFechamento.Relatorio.os', [
                 'ordensServico' => $ordensServico,
                 'totalTempos' => $totalTempos,
                 'totalOrdens' => $totalOrdens,
+                'dadosSigecloud' => $dadosSigecloud,
             ]);
+
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao processar a requisição: ' . $e->getMessage());
         } finally {
@@ -246,28 +282,24 @@ class RelatorioFechamentoController extends Controller
 
 
 
+
     public function gerarRelatorioPdf(Request $request)
     {
         $ordensServico = json_decode($request->input('ordensServico'), true);
-
-        // Cálculo de tempos
-        $totalTempos = [
-            'N1' => 0,
-            'N2' => 0,
-            'N3' => 0,
-        ];
-
-        if (!$ordensServico) {
-            return redirect()->back()->with('error', 'Nenhuma ordem de serviço encontrada para exportar.');
+        $dadosSigecloud = json_decode($request->input('dadosSigecloud'), true);
+    
+        if (!$ordensServico && !$dadosSigecloud) {
+            return redirect()->back()->with('error', 'Nenhuma informação encontrada para exportar.');
         }
-
-        // Gere o PDF com as ordens de serviço (exemplo usando Dompdf)
-        $pdf = PDF::loadView('Modulos.RelatorioFechamento.Relatorio.print', compact('ordensServico'))
-        ->setPaper('a4', 'portrait');
-     
-        return $pdf->stream('relatorio_ordens.pdf');
         
+        
+        // Gere o PDF passando os dois arrays para a view
+        $pdf = PDF::loadView('Modulos.RelatorioFechamento.Relatorio.print', compact('ordensServico', 'dadosSigecloud'))
+            ->setPaper('a4', 'portrait');
+        
+        return $pdf->stream('relatorio_ordens.pdf');
     }
+    
 
     public function limparCache()
     {
