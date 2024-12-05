@@ -129,7 +129,7 @@
                                             </div>
                                             <div>
                                                 <a href="{{route ('margem.index')}}" class="font-semibold text-gray-900">
-                                                    Relatorio de fechamento
+                                                    Margem
                                                     <p class="mt-1 text-gray-600">Calcular margens de venda / lucro</p>
                                                 </a>                                        
                                             </div>  

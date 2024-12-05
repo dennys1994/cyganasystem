@@ -151,14 +151,18 @@ class RelatorioFechamentoController extends Controller
             'N2' => 0,
             'N3' => 0,
             'Sem Tempo' => [],  // Lista para ordens sem tempo
+            'ordens' => [], 
         ];
 
         // Verificar se os dados já estão no cache
         if (Cache::has($cacheKey)) {
-            $ordensServico = Cache::get($cacheKey);
+            // Recuperar dados do cache
+            $cacheData = Cache::get($cacheKey);
             return view('Modulos.RelatorioFechamento.Relatorio.os', [
-                'ordensServico' => $ordensServico,
-                'totalTempos' => $totalTempos,
+                'ordensServico' => $cacheData['ordensServico'],
+                'dadosSigecloud' => $cacheData['dadosSigecloud'],
+                'totalTempos' => $cacheData['totalTempos'],
+                'totalOrdens' => $cacheData['totalOrdens'],
             ]);
         }
 
@@ -194,8 +198,6 @@ class RelatorioFechamentoController extends Controller
 
             $ordensServico = $response->json()['lista'] ?? [];
             
-            // Cachear os resultados
-            Cache::put($cacheKey, $ordensServico, 600);
 
 
             // Adicionar a chamada à API Sigecloud
@@ -226,45 +228,76 @@ class RelatorioFechamentoController extends Controller
             // Processando os dados retornados
             $dadosSigecloud = $responseSigecloud->json() ?? [];
 
-            // Cachear os resultados
-            Cache::put($cacheKey, $ordensServico, 600);
-
 
             // Calcular tempos por nível
             foreach ($ordensServico as &$ordem) {
-                if (isset($ordem['servico_realizado'])) {
-                    // A expressão regular para capturar o tempo e o nível
-                    preg_match_all('/(\d+)\s*(h|hr|min|minutos|m)\s*(n1|n2|n3)/i', $ordem['servico_realizado'], $matches, PREG_SET_ORDER);
-                
+                if (isset($ordem['servico_realizado']) && ($ordem['status'] === 'Finalizado')) {
+                  // Expressão regular ajustada para capturar horas e minutos, considerando variações no formato
+                    preg_match_all('/(\d+)\s*(h|hr|hora|horas|min|minuto|minutos|m)?\s*(\d+)?\s*(min|minuto|minutos|m)?\s*(n1|n2|n3)/i', $ordem['servico_realizado'], $matches, PREG_SET_ORDER);
+
                     // Flag para verificar se algum tempo foi encontrado
                     $tempoEncontrado = false;
-                
+
                     // Percorre todas as correspondências encontradas pela expressão regular
                     foreach ($matches as $match) {
-                        // Captura o tempo, unidade e nível
-                        $tempo = (int)$match[1];
-                        $unidade = strtolower($match[2]); // converte a unidade para minúscula
-                        $nivel = strtoupper($match[3]);  // converte o nível para maiúscula
-                
-                        // Verifica se a unidade é hora e converte para minutos, caso contrário, mantém em minutos
-                        $minutos = ($unidade === 'h' || $unidade === 'hr') ? $tempo * 60 : $tempo;
-                
-                        // Soma o tempo ao nível correspondente
-                        $totalTempos[$nivel] += $minutos/60;
-                
-                        // Se encontrou um tempo, marca a flag como true
-                        $tempoEncontrado = true;
+                        // Captura as partes relevantes
+                        $horas = 0; // Inicializa horas com 0
+                        $minutos = 0; // Inicializa minutos com 0
+                        $nivel = isset($match[5]) ? strtoupper($match[5]) : null; // Nível (N1, N2, N3)
+
+                        // Verifica se o primeiro número é seguido por 'h', 'hr', 'hora', 'horas', que indica horas
+                        if (isset($match[2]) && in_array(strtolower($match[2]), ['h', 'hr', 'hora', 'horas'])) {
+                            $horas = (int)$match[1];  // Número de horas
+                        }
+
+                        // Verifica se o primeiro número é seguido por 'min', 'minuto', 'minutos', que indica minutos
+                        elseif (isset($match[2]) && in_array(strtolower($match[2]), ['min', 'minuto', 'minutos', 'm'])) {
+                            $minutos = (int)$match[1];  // Número de minutos
+                        }
+
+                        // Caso não tenha sido identificado como horas ou minutos no primeiro match, verifica o terceiro campo (caso tenha)
+                        if (isset($match[3]) && in_array(strtolower($match[4]), ['min', 'minuto', 'minutos', 'm'])) {
+                            $minutos = (int)$match[3];  // Atribui o terceiro valor aos minutos
+                        }
+
+                        // Calcula o total em minutos
+                        $totalMinutos = ($horas * 60) + $minutos;
+
+                        // Se o nível e o total de minutos forem válidos, registra a ordem
+                        if ($nivel && $totalMinutos > 0) {
+                            $totalTempos['ordens'][] = [
+                                'numero_ordem' => $ordem['codigo'],  // Número da ordem
+                                'tempo_lido'   => $totalMinutos,     // Tempo lido em minutos (não dividido por 60, pois estamos lidando com minutos diretamente)
+                                'classe'       => $nivel,            // Classe associada (N1, N2, N3)
+                            ];
+                        }
+
+                        // Converte para horas e adiciona ao nível correspondente
+                        if ($nivel && isset($totalTempos[$nivel])) {
+                            $totalTempos[$nivel] += $totalMinutos; // Adiciona em horas para o nível (não converte de novo se já estiver em minutos)
+                        }
+
+                        // Marca que encontramos algum tempo
+                        if ($totalMinutos > 0) {
+                            $tempoEncontrado = true;
+                        }
                     }
-                
-                    // Se não foi encontrado nenhum tempo (se a flag não foi ativada)
+
+                    // Se não encontrou tempo, adiciona à lista de ordens sem tempo
                     if (!$tempoEncontrado) {
-                        // Adiciona o código da ordem à lista de "Sem Tempo"
                         $totalTempos['Sem Tempo'][] = $ordem['codigo'];
                     }
                 }                
             }
             $totalOrdens = count($ordensServico);
 
+            // Cachear os resultados em uma única estrutura
+            Cache::put($cacheKey, [
+                'ordensServico' => $ordensServico,
+                'dadosSigecloud' => $dadosSigecloud,
+                'totalOrdens' => count($ordensServico),
+                'totalTempos' => $totalTempos,
+            ], 600);
 
             return view('Modulos.RelatorioFechamento.Relatorio.os', [
                 'ordensServico' => $ordensServico,
@@ -288,19 +321,21 @@ class RelatorioFechamentoController extends Controller
         $ordensServico = json_decode($request->input('ordensServico'), true);
         $dadosSigecloud = json_decode($request->input('dadosSigecloud'), true);
     
+         // Calculando os totais de tempos e valores
+        $totalTempos = json_decode($request->input('totalTempos'), true);
+        
         if (!$ordensServico && !$dadosSigecloud) {
             return redirect()->back()->with('error', 'Nenhuma informação encontrada para exportar.');
         }
         
         
         // Gere o PDF passando os dois arrays para a view
-        $pdf = PDF::loadView('Modulos.RelatorioFechamento.Relatorio.print', compact('ordensServico', 'dadosSigecloud'))
+        $pdf = PDF::loadView('Modulos.RelatorioFechamento.Relatorio.print', compact('ordensServico', 'dadosSigecloud', 'totalTempos'))
             ->setPaper('a4', 'portrait');
         
         return $pdf->stream('relatorio_ordens.pdf');
     }
     
-
     public function limparCache()
     {
         // Limpar todo o cache

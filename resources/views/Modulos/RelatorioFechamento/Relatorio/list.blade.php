@@ -155,22 +155,19 @@
             const clientesTableBody = document.getElementById('clientes-table-body');
             const noResultsDiv = document.getElementById('no-results');
             const clienteRows = document.querySelectorAll('.cliente-row');
-
+    
             // Função para filtrar os clientes
             function filterClientes() {
                 const searchQuery = searchInput.value.toLowerCase();
-                const selectedEquipe = equipeFilter.value;
-
+    
                 let visibleCount = 0;
                 clienteRows.forEach(row => {
                     const nome = row.dataset.nome.toLowerCase();
                     const razao = row.dataset.razao.toLowerCase();
-                    const cnpj = row.dataset.cnpj;
-                    const equipes = row.dataset.equipes;
-
+                    const cnpj = row.dataset.cnpj.toLowerCase();
+    
                     const matchesSearch = !searchQuery || nome.includes(searchQuery) || razao.includes(searchQuery) || cnpj.includes(searchQuery);
     
-
                     if (matchesSearch) {
                         row.classList.remove('hidden');
                         visibleCount++;
@@ -178,16 +175,15 @@
                         row.classList.add('hidden');
                     }
                 });
-
+    
                 noResultsDiv.classList.toggle('hidden', visibleCount > 0);
             }
-
-            // Adicionar eventos de filtro
+    
+            // Adicionar evento de filtro
             searchInput.addEventListener('input', filterClientes);
-            equipeFilter.addEventListener('change', filterClientes);
         });
- 
     </script>
+    
     <script>
         // Função para alternar a visibilidade do texto
         document.getElementById('tooltip-button').addEventListener('click', function() {

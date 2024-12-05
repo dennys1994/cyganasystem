@@ -13,10 +13,16 @@
             style="margin: 10px 0 10px 0;">
                 {{ __('Voltar') }}
         </a>
-        <form action="{{ route('relatorio.pdf') }}" method="POST" class="inline-block w-full max-w-xs"  target="_blank">
+        <form action="{{ route('relatorio.pdf') }}" method="POST" class="inline-block w-full max-w-xs" target="_blank">
             @csrf
-            <input type="hidden" name="ordensServico" value="{{ json_encode($ordensServico) }}">
-            <input type="hidden" name="dadosSigecloud" value="{{ json_encode($dadosSigecloud) }}">
+            <input type="hidden" name="ordensServico" value="{{ json_encode(collect($ordensServico)->filter(function($ordem) {
+                return $ordem['status'] === 'Finalizado'; // Condição de filtro
+            })) }}">
+            <input type="hidden" name="dadosSigecloud" value="{{ json_encode(collect($dadosSigecloud)->filter(function ($pedido) {
+                return $pedido['StatusSistema'] === 'Pedido' || $pedido['StatusSistema'] === 'Pedido Nao Faturado';
+            })) }}">
+            <input type="hidden" name="totalTempos" value="{{ json_encode(collect($totalTempos)) }}">
+
             <button type="submit"
                 class="py-3 px-6 text-center text-white font-semibold bg-blue-600 rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all duration-300 ease-in-out flex items-center justify-center space-x-2"
                 style="margin: 10px 0 10px 0;">
@@ -26,16 +32,44 @@
                 </svg>
                 <span>{{ __('Exportar') }}</span>
             </button>
-        </form>
-        <div class="bg-gray-100 p-4 mb-4 rounded-md">
-            <h3 class="text-xl font-bold text-gray-800">Resumo de Tempos</h3>
-            <ul class="list-disc pl-6">
-                <li><span class="font-medium">Total de ordens:</span> {{ $totalOrdens }} ordens</li>
-                <li><span class="font-medium">Tempo Nível 1 (N1):</span> {{ $totalTempos['N1'] }} Horas</li>
-                <li><span class="font-medium">Tempo Nível 2 (N2):</span> {{ $totalTempos['N2'] }} Horas</li>
-                <li><span class="font-medium">Tempo Nível 3 (N3):</span> {{ $totalTempos['N3'] }} Horas</li>
-                <li><span class="font-medium">Ordens sem tempo:</span> {{ implode(', ', $totalTempos['Sem Tempo']) }}</li>
-            </ul>
+        </form>        
+        <div class="grid grid-cols-2 gap-6">
+            <div class="bg-gray-100 p-4 mb-4 rounded-md">
+                <h3 class="text-xl font-bold text-gray-800">Resumo de Tempos</h3>
+                <ul class="list-disc pl-6">
+                    <li><span class="font-medium">Total de ordens:</span> {{ $totalOrdens }} ordens</li>
+                    <li><span class="font-medium">Tempo Nível 1 (N1):</span> @php echo $totalTempos['N1']/60 @endphp Horas</li>
+                    <li><span class="font-medium">Tempo Nível 2 (N2):</span> @php echo $totalTempos['N2']/60 @endphp Horas</li>
+                    <li><span class="font-medium">Tempo Nível 3 (N3):</span> @php echo $totalTempos['N3']/60 @endphp Horas</li>
+                    <li><span class="font-medium">Ordens sem tempo:</span> {{ implode(', ', $totalTempos['Sem Tempo']) }}</li>
+                    <li><span class="font-medium">Ordens com tempo:</span></li>
+                    <ul>
+                        @foreach ($totalTempos['ordens'] as $ordem)
+                            <li>
+                                Número da Ordem: {{ $ordem['numero_ordem'] }} | 
+                                Tempo Lido: {{ number_format($ordem['tempo_lido'], 2) }} Minutos | 
+                                Classe: {{ $ordem['classe'] }}
+                            </li>
+                        @endforeach
+                    </ul>
+                </ul>
+            </div>
+            <div class="bg-gray-100 p-4 mb-4 rounded-md">
+                <h3 class="text-xl font-bold text-gray-800">Valores a cobrar</h3>
+                <ul class="list-disc pl-6">
+                    <li><span class="font-medium">N1</span> @php echo 'R$ ' . ($totalTempos['N1']/60)*100 . ',00' @endphp </li>
+                    <li><span class="font-medium">N2</span> @php echo 'R$ ' . ($totalTempos['N2']/60)*200 . ',00' @endphp </li>
+                    <li><span class="font-medium">N3</span> @php echo 'R$ ' . ($totalTempos['N3']/60)*300 . ',00' @endphp </li>
+                    <li>
+                        <span class="font-medium">Total Horas:</span>
+                        <span id="totalHoras"> 
+                            @php echo 'R$ ' . (($totalTempos['N1']/60)*100 + ($totalTempos['N2']/60)*200 + ($totalTempos['N3']/60)*300) . ',00' @endphp 
+                        </span>
+                    </li>
+                    <li><span class="font-medium" >Total Pedidos:</span><span id="total">R$ 0,00</span></li>
+                    <li><span class="font-medium" >Total Geral:</span><span id="totalGeral">R$ 0,00</span></li>
+                </ul>
+            </div>
         </div>
       
         
@@ -46,56 +80,58 @@
             <div>
                 <h3 class="text-xl font-bold text-white">Pedidos (Milvus)</h3>
                 @foreach($ordensServico as $ordem)
-                    <div class="bg-white shadow-md rounded-lg p-4 mb-4">
-                        <div class="border-b border-gray-200 pb-2 mb-3">
-                            <h5 class="text-lg font-semibold text-gray-800">O.S. ID: {{ $ordem['codigo'] }}</h5>
+                    @if($ordem['status'] === 'Finalizado')
+                        <div class="bg-white shadow-md rounded-lg p-4 mb-4">
+                            <div class="border-b border-gray-200 pb-2 mb-3">
+                                <h5 class="text-lg font-semibold text-gray-800">O.S. ID: {{ $ordem['codigo'] }}</h5>
+                            </div>
+                            <div class="space-y-3"> 
+                                @if($ordem['data_criacao'])
+                                    <div>
+                                        <span class="font-medium text-gray-700">Data de Criação:</span> 
+                                        <span>{{ \Carbon\Carbon::parse($ordem['data_criacao'])->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                @endif
+
+                                @if($ordem['descricao'])
+                                    <div>
+                                        <span class="font-medium text-gray-700">Descrição:</span> 
+                                        <span>{{ $ordem['descricao'] }}</span>
+                                    </div>
+                                @endif
+
+                                @if($ordem['tecnico'])
+                                    <div>
+                                        <span class="font-medium text-gray-700">Técnico:</span> 
+                                        <span>{{ $ordem['tecnico'] }}</span>
+                                    </div>
+                                @endif
+
+                                @if($ordem['servico_realizado'])
+                                    <div>
+                                        <span class="font-medium text-gray-700">Serviço Realizado:</span>
+                                        <span>{{ $ordem['servico_realizado'] }}</span>
+                                    </div>
+                                @endif
+                    
+                                
+
+                                @if($ordem['data_solucao'])
+                                    <div>
+                                        <span class="font-medium text-gray-700">Data da Solução:</span> 
+                                        <span>{{ \Carbon\Carbon::parse($ordem['data_solucao'])->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                @endif            
+                    
+                                @if($ordem['status'])
+                                    <div>
+                                        <span class="font-medium text-gray-700">Status:</span> 
+                                        <span class="text-green-500 font-semibold">{{ $ordem['status'] }}</span>
+                                    </div>
+                                @endif                                                                                                                       
+                            </div>
                         </div>
-                        <div class="space-y-3"> 
-                            @if($ordem['data_criacao'])
-                                <div>
-                                    <span class="font-medium text-gray-700">Data de Criação:</span> 
-                                    <span>{{ \Carbon\Carbon::parse($ordem['data_criacao'])->format('d/m/Y H:i') }}</span>
-                                </div>
-                            @endif
-
-                            @if($ordem['descricao'])
-                                <div>
-                                    <span class="font-medium text-gray-700">Descrição:</span> 
-                                    <span>{{ $ordem['descricao'] }}</span>
-                                </div>
-                            @endif
-
-                            @if($ordem['tecnico'])
-                                <div>
-                                    <span class="font-medium text-gray-700">Técnico:</span> 
-                                    <span>{{ $ordem['tecnico'] }}</span>
-                                </div>
-                            @endif
-
-                            @if($ordem['servico_realizado'])
-                                <div>
-                                    <span class="font-medium text-gray-700">Serviço Realizado:</span>
-                                    <span>{{ $ordem['servico_realizado'] }}</span>
-                                </div>
-                            @endif
-                
-                            
-
-                            @if($ordem['data_solucao'])
-                                <div>
-                                    <span class="font-medium text-gray-700">Data da Solução:</span> 
-                                    <span>{{ \Carbon\Carbon::parse($ordem['data_solucao'])->format('d/m/Y H:i') }}</span>
-                                </div>
-                            @endif            
-                
-                            @if($ordem['status'])
-                                <div>
-                                    <span class="font-medium text-gray-700">Status:</span> 
-                                    <span class="text-green-500 font-semibold">{{ $ordem['status'] }}</span>
-                                </div>
-                            @endif                                                                                                                       
-                        </div>
-                    </div>
+                    @endif
                 @endforeach
             </div>
             <!-- Coluna 2: Dados da API Sigecloud -->
@@ -115,7 +151,10 @@
                                 <div><span class="font-medium text-gray-700">Data Abertura:</span> {{ $pedido['PlanoDeConta']?? 'Status não disponível' }}</div> 
 
                                 <!-- Exibindo o Valor Final -->
-                                <div><span class="font-medium text-gray-700">Valor Final:</span> R$ {{ number_format($pedido['ValorFinal'], 2, ',', '.') }}</div>
+                                <div class="valor-final">
+                                    <span class="font-medium text-gray-700">Valor Final:</span> 
+                                    R$ {{ number_format($pedido['ValorFinal'], 2, ',', '.') }}
+                                </div>
                                 
                                 <!-- Exibindo a Categoria -->
                                 <div><span class="font-medium text-gray-700">Problema:</span> {{ $pedido['OrdemServico']['Problema'] }}</div>
@@ -164,3 +203,58 @@
             </div>
     
 </x-app-layout>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let total = 0;
+
+        // Selecionar todos os elementos que contêm os valores finais
+        document.querySelectorAll('.valor-final').forEach(element => {
+            const valorText = element.textContent.match(/R\$ ([\d.,]+)/);
+            if (valorText) {
+                const valor = parseFloat(valorText[1].replace('.', '').replace(',', '.'));
+                total += valor;
+            }
+        });
+
+        // Atualizar o total na página
+        document.getElementById('total').textContent = `R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        // Chama a função para calcular o total geral depois de atualizar o total
+        calcularTotalGeral();
+    });
+</script>
+
+<script>
+    function calcularTotalGeral() {
+        // Obtém os valores dos elementos
+        const totalHoras = document.getElementById("totalHoras").textContent.trim();
+        const totalPedidos = document.getElementById("total").textContent.trim();
+
+        // Função para converter "R$ X.XXX,XX" para número
+        function moedaParaNumero(valor) {
+            return parseFloat(
+                valor
+                    .replace("R$", "") // Remove "R$"
+                    .replace(".", "")  // Remove os pontos de milhar
+                    .replace(",", ".") // Substitui a vírgula decimal por ponto
+                    .trim()
+            );
+        }
+
+        // Converte os valores para números
+        const horasNumerico = moedaParaNumero(totalHoras);
+        const pedidosNumerico = moedaParaNumero(totalPedidos);
+
+        // Calcula o total geral
+        const totalGeral = horasNumerico + pedidosNumerico;
+
+        // Formata o número para o formato de moeda brasileiro
+        const totalGeralFormatado = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        }).format(totalGeral);
+        
+        // Atualiza o valor no HTML
+        document.getElementById("totalGeral").textContent = totalGeralFormatado;
+    }
+</script>
