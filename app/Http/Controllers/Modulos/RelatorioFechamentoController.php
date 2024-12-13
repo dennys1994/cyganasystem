@@ -40,7 +40,7 @@ class RelatorioFechamentoController extends Controller
     {
         $relatorioUsers = RelatorioUser::all();
 
-        return view('Modulos.RelatorioFechamento.Users.list', compact('relatorioUsers'));
+        return view('Modulos.Financeiro.RelatorioFechamento.Users.list', compact('relatorioUsers'));
     }
 
     // Atualizar credenciais
@@ -69,7 +69,7 @@ class RelatorioFechamentoController extends Controller
     public function editUser($id)
     {
         $user = RelatorioUser::findOrFail($id);
-        return view('Modulos.RelatorioFechamento.Users.edit', compact('user'));
+        return view('Modulos.Financeiro.RelatorioFechamento.Users.edit', compact('user'));
     }
 
     // Excluir credenciais
@@ -104,7 +104,7 @@ class RelatorioFechamentoController extends Controller
        if ($response->successful()) {
            // Retornando os dados para a view
            $clientes = $response->json()['lista'];
-           return view('Modulos.RelatorioFechamento.Relatorio.list', compact('clientes'));
+           return view('Modulos.Financeiro.RelatorioFechamento.Relatorio.list', compact('clientes'));
        } else {
            // Em caso de erro, retornar uma mensagem de erro
            return back()->with('error', 'Erro ao buscar clientes.');
@@ -150,6 +150,7 @@ class RelatorioFechamentoController extends Controller
             'N1' => 0,
             'N2' => 0,
             'N3' => 0,
+            'Dia do Gerente' => 0,
             'Sem Tempo' => [],  // Lista para ordens sem tempo
             'ordens' => [], 
         ];
@@ -231,64 +232,50 @@ class RelatorioFechamentoController extends Controller
 
             // Calcular tempos por nível
             foreach ($ordensServico as &$ordem) {
-                if (isset($ordem['servico_realizado']) && ($ordem['status'] === 'Finalizado')) {
-                  // Expressão regular ajustada para capturar horas e minutos, considerando variações no formato
-                    preg_match_all('/(\d+)\s*(h|hr|hora|horas|min|minuto|minutos|m)?\s*(\d+)?\s*(min|minuto|minutos|m)?\s*(n1|n2|n3)/i', $ordem['servico_realizado'], $matches, PREG_SET_ORDER);
-
-                    // Flag para verificar se algum tempo foi encontrado
-                    $tempoEncontrado = false;
-
-                    // Percorre todas as correspondências encontradas pela expressão regular
-                    foreach ($matches as $match) {
-                        // Captura as partes relevantes
-                        $horas = 0; // Inicializa horas com 0
-                        $minutos = 0; // Inicializa minutos com 0
-                        $nivel = isset($match[5]) ? strtoupper($match[5]) : null; // Nível (N1, N2, N3)
-
-                        // Verifica se o primeiro número é seguido por 'h', 'hr', 'hora', 'horas', que indica horas
-                        if (isset($match[2]) && in_array(strtolower($match[2]), ['h', 'hr', 'hora', 'horas'])) {
-                            $horas = (int)$match[1];  // Número de horas
-                        }
-
-                        // Verifica se o primeiro número é seguido por 'min', 'minuto', 'minutos', que indica minutos
-                        elseif (isset($match[2]) && in_array(strtolower($match[2]), ['min', 'minuto', 'minutos', 'm'])) {
-                            $minutos = (int)$match[1];  // Número de minutos
-                        }
-
-                        // Caso não tenha sido identificado como horas ou minutos no primeiro match, verifica o terceiro campo (caso tenha)
-                        if (isset($match[3]) && in_array(strtolower($match[4]), ['min', 'minuto', 'minutos', 'm'])) {
-                            $minutos = (int)$match[3];  // Atribui o terceiro valor aos minutos
-                        }
-
+                if (isset($ordem['total_horas']) && isset($ordem['servico_realizado']) && ($ordem['status'] === 'Finalizado')) {
+                    // Determina a classe a partir dos dois primeiros caracteres de 'servico_realizado'
+                    $classe = null;
+                    if (preg_match('/\b(N1|N2|N3)\b/i', $ordem['servico_realizado'], $matchClasse)) {
+                        $classe = strtoupper($matchClasse[1]); // Captura e padroniza a classe
+                    }
+                    
+                    // Verifica se o campo total_horas está no formato esperado HH:MM
+                    if (preg_match('/^(\d{1,2}):(\d{2})$/', $ordem['total_horas'], $match)) {
+                        $horas = (int)$match[1];    // Captura as horas
+                        $minutos = (int)$match[2];  // Captura os minutos
+                
                         // Calcula o total em minutos
                         $totalMinutos = ($horas * 60) + $minutos;
-
-                        // Se o nível e o total de minutos forem válidos, registra a ordem
-                        if ($nivel && $totalMinutos > 0) {
+                        if($totalMinutos < 30)
+                            $totalMinutos = 30;
+                        // Se a classe e o total de minutos forem válidos, registra a ordem
+                        if ($classe && $totalMinutos > 0) {
                             $totalTempos['ordens'][] = [
                                 'numero_ordem' => $ordem['codigo'],  // Número da ordem
-                                'tempo_lido'   => $totalMinutos,     // Tempo lido em minutos (não dividido por 60, pois estamos lidando com minutos diretamente)
-                                'classe'       => $nivel,            // Classe associada (N1, N2, N3)
+                                'tempo_lido'   => $totalMinutos,     // Tempo lido em minutos
+                                'classe'       => $classe,          // Classe associada (N1, N2, N3)
                             ];
                         }
-
-                        // Converte para horas e adiciona ao nível correspondente
-                        if ($nivel && isset($totalTempos[$nivel])) {
-                            $totalTempos[$nivel] += $totalMinutos; // Adiciona em horas para o nível (não converte de novo se já estiver em minutos)
-                        }
-
-                        // Marca que encontramos algum tempo
-                        if ($totalMinutos > 0) {
-                            $tempoEncontrado = true;
+                
+                        // Adiciona o tempo ao total da classe correspondente
+                        if ($classe && isset($totalTempos[$classe])) {
+                            $totalTempos[$classe] += $totalMinutos;
                         }
                     }
-
-                    // Se não encontrou tempo, adiciona à lista de ordens sem tempo
-                    if (!$tempoEncontrado) {
+                    else if (preg_match('/^(01|02)/', $ordem['servico_realizado'], $matchCodigo)) {
+                            if ($matchCodigo[1] === 'G1') {
+                                $totalTempos['Dia do Gerente'] += 1; // Incrementa 1 para código "01"
+                            } elseif ($matchCodigo[1] === 'G2') {
+                                $totalTempos['Dia do Gerente'] += 0.5; // Incrementa 0.5 para código "02"
+                            }
+                    }
+                    else {
+                        // Caso o formato de total_horas não seja válido, adiciona à lista de ordens sem tempo
                         $totalTempos['Sem Tempo'][] = $ordem['codigo'];
                     }
-                }                
+                }                  
             }
+
             $totalOrdens = count($ordensServico);
 
             // Cachear os resultados em uma única estrutura
@@ -330,7 +317,7 @@ class RelatorioFechamentoController extends Controller
         
         
         // Gere o PDF passando os dois arrays para a view
-        $pdf = PDF::loadView('Modulos.RelatorioFechamento.Relatorio.print', compact('ordensServico', 'dadosSigecloud', 'totalTempos'))
+        $pdf = PDF::loadView('Modulos.Financeiro.RelatorioFechamento.Relatorio.print', compact('ordensServico', 'dadosSigecloud', 'totalTempos'))
             ->setPaper('a4', 'portrait');
         
         return $pdf->stream('relatorio_ordens.pdf');

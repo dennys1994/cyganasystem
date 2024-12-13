@@ -119,43 +119,22 @@
                             <div class="p-4">
                             <!-- Dropdown items -->
                                 <!-- 1° item -->
-                                @if($hasAccessToMargem)
-                                    <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
-                                        <a href="{{route ('margem.index')}}" >
-                                            <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
-                                                </svg>                                                                                                                             
-                                            </div>
-                                            <div>
-                                                <a href="{{route ('margem.index')}}" class="font-semibold text-gray-900">
-                                                    Margem
-                                                    <p class="mt-1 text-gray-600">Calcular margens de venda / lucro</p>
-                                                </a>                                        
-                                            </div>  
-                                        </a>                         
-                                    </div>    
-                                 @endif   
-                                <!-- Final 1° item -->
-                                @if(Auth::check() && Auth::user()->role_id == 1)
-                                <!-- 2° item -->                            
-                                    <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
-                                        <a href="{{route ('relatorio')}}" >
-                                            <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
-                                                </svg>                                                                                                                                                                              
-                                            </div>
-                                            <div>
-                                                <a href="{{route ('relatorio')}}" class="font-semibold text-gray-900">
-                                                    Relatorio Fechamento
-                                                    <p class="mt-1 text-gray-600">Fazer fechamento do mês via Api Sige e Api Milvus</p>
-                                                </a>                                        
-                                            </div>  
-                                        </a>                         
-                                    </div>    
-                                 @endif   
-                                <!-- Final 2° item -->                                                
+                                <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
+                                    <a href="{{route ('financeiro.index')}}" >
+                                        <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+                                            </svg>                                                                                                                             
+                                        </div>
+                                        <div>
+                                            <a href="{{route ('financeiro.index')}}" class="font-semibold text-gray-900">
+                                                Financeiro
+                                                <p class="mt-1 text-gray-600">Funções ligadas a financeiro</p>
+                                            </a>                                        
+                                        </div>  
+                                    </a>                         
+                                </div>                                       
+                                <!-- Final 1° item -->                                                                             
                             </div>
                         </div>                                   
                     </div>                          

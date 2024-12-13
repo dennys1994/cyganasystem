@@ -6,6 +6,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\Margem\MargemController;
 use App\Http\Controllers\Modulos\RelatorioFechamentoController;
+use App\Http\Controllers\Modulos\BandeiraController;
+
 
 use Illuminate\Support\Facades\Route;
 
@@ -44,7 +46,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('relatorio-fechamento')->group(function () {
             //Rota com as funcoes principais do relatorio 
             Route::get('/relatorio-fechamento', function () {
-                return view('Modulos.RelatorioFechamento.index');
+                return view('Modulos.Financeiro.RelatorioFechamento.index');
             })->name('relatorio');
 
             //Cadastro, edicao e listagem das credenciais 
@@ -62,16 +64,16 @@ Route::middleware('auth')->group(function () {
 
 
             Route::get('/usuarios-index', function () {
-                return view('Modulos.RelatorioFechamento.Users.index');
+                return view('Modulos.Financeiro.RelatorioFechamento.Users.index');
             })->name('relatorio.users.index');
 
             Route::get('/usuarios-store', function () {
-                return view('Modulos.RelatorioFechamento.Users.store');
+                return view('Modulos.Financeiro.RelatorioFechamento.Users.store');
             })->name('relatorio.users.store');            
 
             //funções da geração do relatorio
             Route::get('/relatorio', function () {
-                return view('Modulos.RelatorioFechamento.Relatorio.index');
+                return view('Modulos.Financeiro.RelatorioFechamento.Relatorio.index');
             })->name('relatorio.index'); 
 
             //listar clientes
@@ -84,9 +86,13 @@ Route::middleware('auth')->group(function () {
             Route::post('/limpar-cache', [RelatorioFechamentoController::class, 'limparCache'])->name('limpar.cache');
 
         });
-
+        
     
     });
+
+    Route::get('/financeiro', function () {
+        return view('Modulos.Financeiro.index');
+    })->name('financeiro.index');
 
     //Modulos
     Route::middleware([CheckModuleAccess::class . ':Margem'])->group(function () {
@@ -121,6 +127,25 @@ Route::middleware('auth')->group(function () {
             Route::get('calcular-preco', [MargemController::class, 'showCalcularPreco'])->name('calcular_preco_view');
         });
     });
+
+
+    //Rota Relatorio de fechamento        
+    Route::middleware([CheckModuleAccess::class . ':CalculadoraBandeira'])->group(function () {
+        Route::prefix('calculadorabandeiras')->group(function () {
+            Route::resource('bandeiras', BandeiraController::class);
+            Route::post('taxas', [BandeiraController::class, 'store_taxa'])->name('taxas.store');
+            Route::delete('taxas/{id}', [BandeiraController::class, 'destroy_taxa'])->name('taxas.destroy');
+            Route::get('/funcoes', function () {
+                return view('Modulos.Financeiro.CalculadoraMaquininha.functions');
+            })->name('calculadora.funcoes');
+            Route::get('taxas/{id}/edit', [BandeiraController::class, 'edit_taxa'])->name('taxas.edit');
+            Route::put('taxas/{id}', [BandeiraController::class, 'update_taxa'])->name('taxas.update');
+            Route::get('calculadora', [BandeiraController::class, 'showCalculadora'])->name('calculadora.show');
+            Route::post('calculadora/calcular', [BandeiraController::class, 'calcularTaxas'])->name('calculadora.calcular');
+        });
+    });
+
+
 
     
 });
