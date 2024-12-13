@@ -213,7 +213,7 @@
                 </svg>
             </button>
             <div x-show="openFuncoes" class="pl-4 space-y-1" x-cloak>
-                <a href="{{route ('margem.index')}}" class="block text-sm text-gray-200 hover:bg-gray-100">{{ __('Margens') }}</a>                   
+                <a href="{{route ('financeiro.index')}}" class="block text-sm text-gray-200 hover:bg-gray-100">{{ __('Financeiro') }}</a>                   
             </div>
             
             <button @click="openPerfil = !openPerfil" class="block w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-100 hover:text-black">

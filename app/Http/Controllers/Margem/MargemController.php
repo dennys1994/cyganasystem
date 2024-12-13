@@ -12,20 +12,20 @@ class MargemController extends Controller
 
     public function index()
     {
-        return view('modulos.Financeiro.margem.index');
+        return view('Modulos.Financeiro.Margem.index');
     }
 
     public function index_categorias()
     {
         $categorias = CategoriaMargem::all(); // Obtém todas as categorias do banco
-        return view('modulos.Financeiro.margem.index_categorias', compact('categorias'));
+        return view('Modulos.Financeiro.Margem.index_categorias', compact('categorias'));
     }
 
 
     // Função para exibir o formulário de criação de categorias
     public function createCategoria()
     {
-        return view('modulos.Financeiro.margem.create_categoria');
+        return view('Modulos.Financeiro.Margem.create_categoria');
     }
 
     // Função para salvar a categoria de margem
@@ -46,7 +46,7 @@ class MargemController extends Controller
     public function createFaixa()
     {
         $tabelas = CategoriaMargem::all();
-        return view('modulos.Financeiro.margem.create_faixa', compact('tabelas'));
+        return view('Modulos.Financeiro.Margem.create_faixa', compact('tabelas'));
     }
 
     // Função para salvar a faixa de preço
@@ -121,7 +121,7 @@ class MargemController extends Controller
                 ]);
             }
         }
-        return view('modulos.Financeiro.margem.calcular_preco', [
+        return view('Modulos.Financeiro.Margem.calcular_preco', [
             'categorias' => CategoriaMargem::all(),
             'error' => 'Nenhuma faixa de preço encontrada para os valores informados.',
         ]);
@@ -131,13 +131,13 @@ class MargemController extends Controller
     public function showCalcularPreco()
     {
         $categorias = CategoriaMargem::all(); // Pega todas as categorias
-        return view('modulos.Financeiro.margem.calcular_preco', compact('categorias'));
+        return view('Modulos.Financeiro.Margem.calcular_preco', compact('categorias'));
     }
 
     public function edit($id)
     {
         $categoria = CategoriaMargem::findOrFail($id);
-        return view('modulos.Financeiro.margem.editar_categoria', compact('categoria'));
+        return view('Modulos.Financeiro.Margem.editar_categoria', compact('categoria'));
     }
 
     public function update(Request $request, $id)
@@ -160,7 +160,7 @@ class MargemController extends Controller
     public function faixas_index()
     {
         $faixas = FaixaPreco::all(); // Obtém todas as faixas de preço do banco
-        return view('modulos.Financeiro.margem.faixas.index', compact('faixas'));
+        return view('Modulos.Financeiro.Margem.Faixas.index', compact('faixas'));
     }
 
 
@@ -168,7 +168,7 @@ class MargemController extends Controller
     {
         $faixa = FaixaPreco::findOrFail($id);
         $categorias = CategoriaMargem::all(); // Para selecionar a categoria de margem
-        return view('modulos.Financeiro.margem.faixas.editar', compact('faixa', 'categorias'));
+        return view('Modulos.Financeiro.Margem.Faixas.editar', compact('faixa', 'categorias'));
     }
 
     public function faixas_update(Request $request, $id)

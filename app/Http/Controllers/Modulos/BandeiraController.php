@@ -132,7 +132,10 @@ class BandeiraController extends Controller
         foreach ($taxas as $taxa) {
             $parcelas = $taxa->parcelas;
             $percentual = $taxa->percentual;
-            $valorParcelado = $request->valor * (1 + $percentual / 100);
+
+            
+            $valorParcelado = $request->valor / (1 - ($percentual/100));
+
             $valorParcela = $valorParcelado / $parcelas;
 
             // Armazenar o resultado do cálculo
