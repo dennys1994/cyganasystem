@@ -85,6 +85,7 @@ Route::middleware('auth')->group(function () {
 
             Route::post('/limpar-cache', [RelatorioFechamentoController::class, 'limparCache'])->name('limpar.cache');
 
+            Route::post('/ordem/acao', [RelatorioFechamentoController::class, 'acao'])->name('ordem.acao');
         });
         
     

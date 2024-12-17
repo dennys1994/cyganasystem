@@ -159,7 +159,7 @@ class RelatorioFechamentoController extends Controller
         if (Cache::has($cacheKey)) {
             // Recuperar dados do cache
             $cacheData = Cache::get($cacheKey);
-            return view('Modulos.RelatorioFechamento.Relatorio.os', [
+            return view('Modulos.Financeiro.RelatorioFechamento.Relatorio.os', [
                 'ordensServico' => $cacheData['ordensServico'],
                 'dadosSigecloud' => $cacheData['dadosSigecloud'],
                 'totalTempos' => $cacheData['totalTempos'],
@@ -231,7 +231,7 @@ class RelatorioFechamentoController extends Controller
 
 
             // Calcular tempos por nível
-            foreach ($ordensServico as &$ordem) {
+            foreach ($ordensServico as &$ordem) {                
                 if (isset($ordem['total_horas']) && isset($ordem['servico_realizado']) && ($ordem['status'] === 'Finalizado')) {
                     // Determina a classe a partir dos dois primeiros caracteres de 'servico_realizado'
                     $classe = null;
@@ -262,17 +262,26 @@ class RelatorioFechamentoController extends Controller
                             $totalTempos[$classe] += $totalMinutos;
                         }
                     }
-                    else if (preg_match('/^(01|02)/', $ordem['servico_realizado'], $matchCodigo)) {
-                            if ($matchCodigo[1] === 'G1') {
+                    
+                        if (preg_match('/\b(G1|G2|g1|g2)\b/i', $ordem['servico_realizado'], $matchCodigo)) {
+                            $classe = strtoupper($matchCodigo[1]);                            
+                            if ($classe === 'G1') {
                                 $totalTempos['Dia do Gerente'] += 1; // Incrementa 1 para código "01"
-                            } elseif ($matchCodigo[1] === 'G2') {
+                            } elseif ($classe === 'G2') {
                                 $totalTempos['Dia do Gerente'] += 0.5; // Incrementa 0.5 para código "02"
                             }
-                    }
-                    else {
-                        // Caso o formato de total_horas não seja válido, adiciona à lista de ordens sem tempo
-                        $totalTempos['Sem Tempo'][] = $ordem['codigo'];
-                    }
+                            $totalTempos['ordens'][] = [
+                                'numero_ordem' => $ordem['codigo'],  // Número da ordem
+                                'tempo_lido'   => $totalTempos['Dia do Gerente'],     // Tempo lido em minutos
+                                'classe'       => $classe,          // Classe associada (N1, N2, N3, G1,G2)
+                            ];                            
+                        }
+                        else
+                            // Caso o formato de total_horas não seja válido, adiciona à lista de ordens sem tempo
+                            $totalTempos['Sem Tempo'][] = $ordem['codigo'];
+                    
+                    
+                    
                 }                  
             }
 
@@ -286,7 +295,7 @@ class RelatorioFechamentoController extends Controller
                 'totalTempos' => $totalTempos,
             ], 600);
 
-            return view('Modulos.RelatorioFechamento.Relatorio.os', [
+            return view('Modulos.Financeiro.RelatorioFechamento.Relatorio.os', [
                 'ordensServico' => $ordensServico,
                 'totalTempos' => $totalTempos,
                 'totalOrdens' => $totalOrdens,
@@ -306,18 +315,19 @@ class RelatorioFechamentoController extends Controller
     public function gerarRelatorioPdf(Request $request)
     {
         $ordensServico = json_decode($request->input('ordensServico'), true);
+        $ordensServico1 = json_decode($request->input('ordensServico1'), true);
         $dadosSigecloud = json_decode($request->input('dadosSigecloud'), true);
     
          // Calculando os totais de tempos e valores
         $totalTempos = json_decode($request->input('totalTempos'), true);
-        
+        $totalTempos1 = json_decode($request->input('totalTempos1'), true);
         if (!$ordensServico && !$dadosSigecloud) {
             return redirect()->back()->with('error', 'Nenhuma informação encontrada para exportar.');
         }
         
         
         // Gere o PDF passando os dois arrays para a view
-        $pdf = PDF::loadView('Modulos.Financeiro.RelatorioFechamento.Relatorio.print', compact('ordensServico', 'dadosSigecloud', 'totalTempos'))
+        $pdf = PDF::loadView('Modulos.Financeiro.RelatorioFechamento.Relatorio.print', compact('ordensServico','ordensServico1', 'dadosSigecloud', 'totalTempos','totalTempos1'))
             ->setPaper('a4', 'portrait');
         
         return $pdf->stream('relatorio_ordens.pdf');
@@ -331,7 +341,4 @@ class RelatorioFechamentoController extends Controller
         // Retorne com uma mensagem de sucesso
         return redirect()->back()->with('success', 'Todo o cache foi limpo com sucesso!');
     }
-
-
-
 }

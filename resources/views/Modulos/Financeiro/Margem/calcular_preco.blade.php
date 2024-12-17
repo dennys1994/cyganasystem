@@ -78,7 +78,7 @@
             <div class="mt-8 p-6 bg-gray-700 text-gray-200 rounded-md shadow-md">
                 <h2 class="text-xl font-bold mb-4">Resultados</h2>
                 <p><strong>Custo:</strong> R$ {{ $resultados['custo'] }}</p>
-                <p><strong>Venda à Vista:</strong> R$ {{ $resultados['avista'] }}</p>
+                <p><strong>Venda à Vista:</strong> R$ {{ $resultados['avista'] }} com 10% de desconto.</p>
                 <p><strong>Venda Parcelado:</strong> 10 x R$ {{ $resultados['parcelado'] }} ({{$resultados['parcelado_cheio']}})</p>
                 <p><strong>Margem:</strong> R$ {{ $resultados['margem'] }}</p>
                 <p><strong>Margem Percentual:</strong> {{ $resultados['margem_percentual'] }}%</p>

@@ -15,17 +15,15 @@
         </a>
         <form action="{{ route('relatorio.pdf') }}" method="POST" class="inline-block w-full max-w-xs" target="_blank">
             @csrf
-            <input type="hidden" name="ordensServico" value="{{ json_encode(collect($ordensServico)->filter(function($ordem) {
-                return $ordem['status'] === 'Finalizado'; // Condição de filtro
-            })) }}">
-            <input type="hidden" name="dadosSigecloud" value="{{ json_encode(collect($dadosSigecloud)->filter(function ($pedido) {
-                return $pedido['StatusSistema'] === 'Pedido' || $pedido['StatusSistema'] === 'Pedido Nao Faturado';
-            })) }}">
-            <input type="hidden" name="totalTempos" value="{{ json_encode(collect($totalTempos)) }}">
+            <input type="hidden" name="ordensServico" id="ordensServico">
+            <input type="hidden" name="ordensServico1" id="ordensServico1">
+            <input type="hidden" name="dadosSigecloud" id="dadosSigecloud">
+            <input type="hidden" name="totalTempos" id="totalTempos">
+            <input type="hidden" name="totalTempos1" id="totalTempos1">
 
             <button type="submit"
                 class="py-3 px-6 text-center text-white font-semibold bg-blue-600 rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all duration-300 ease-in-out flex items-center justify-center space-x-2"
-                style="margin: 10px 0 10px 0;">
+                style="margin: 10px 0 10px 0;" onclick="atualizarDadosAntesDeEnviar()">
                 <!-- Ícone de impressora -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
@@ -36,30 +34,69 @@
         <div class="grid grid-cols-2 gap-6">
             <div class="bg-gray-100 p-4 mb-4 rounded-md">
                 <h3 class="text-xl font-bold text-gray-800">Resumo de Tempos</h3>
-                <ul class="list-disc pl-6">
+                <ul class="list-disc pl-6" id="tempos">
                     <li><span class="font-medium">Total de ordens:</span> {{ $totalOrdens }} ordens</li>
-                    <li><span class="font-medium">Tempo Nível 1 (N1):</span> @php echo $totalTempos['N1']/60 @endphp Horas</li>
-                    <li><span class="font-medium">Tempo Nível 2 (N2):</span> @php echo $totalTempos['N2']/60 @endphp Horas</li>
-                    <li><span class="font-medium">Tempo Nível 3 (N3):</span> @php echo $totalTempos['N3']/60 @endphp Horas</li>
+                    <li>
+                        <span class="font-medium">Tempo Nível 1 (N1):</span> 
+                        <span class="tempo" data-nivel="N1">{{ $totalTempos['N1']/60 }}</span> Horas
+                    </li>
+                    <li>
+                        <span class="font-medium">Tempo Nível 2 (N2):</span> 
+                        <span class="tempo" data-nivel="N2">{{ $totalTempos['N2']/60 }}</span> Horas
+                    </li>
+                    <li>
+                        <span class="font-medium">Tempo Nível 3 (N3):</span> 
+                        <span class="tempo" data-nivel="N3">{{ $totalTempos['N3']/60 }}</span> Horas
+                    </li>
+                    <li>
+                        <span class="font-medium">Dia do gerente:</span>
+                        <span class="tempo" data-nivel="DG">{{  $totalTempos['Dia do Gerente'] }} </span> Dias
+                    </li>
                     <li><span class="font-medium">Ordens sem tempo:</span> {{ implode(', ', $totalTempos['Sem Tempo']) }}</li>
                     <li><span class="font-medium">Ordens com tempo:</span></li>
                     <ul>
                         @foreach ($totalTempos['ordens'] as $ordem)
                             <li>
                                 Número da Ordem: {{ $ordem['numero_ordem'] }} | 
-                                Tempo Lido: {{ number_format($ordem['tempo_lido'], 2) }} Minutos | 
-                                Classe: {{ $ordem['classe'] }}
+                                Tempo Lido:
+                                @if($ordem['classe'] !== 'G1' && $ordem['classe'] !== 'G2')
+                                    <input 
+                                        type="number" 
+                                        class="tempo-input" 
+                                        value="{{ number_format($ordem['tempo_lido'] / 60, 2) }}"
+                                        data-ordem="{{ $ordem['numero_ordem'] }}"
+                                        data-classe="{{ $ordem['classe'] }}" 
+                                        min="0"
+                                        step="0.01"
+                                        style="width: 80px; text-align: center;" 
+                                    />
+                                @else
+                                    <span>{{ number_format($ordem['tempo_lido'] / 60, 2) }} horas</span>
+                                @endif                                
+                                Horas | 
+                                Classe: {{ $ordem['classe'] }}                                                    
                             </li>
                         @endforeach
+
                     </ul>
                 </ul>
             </div>
             <div class="bg-gray-100 p-4 mb-4 rounded-md">
                 <h3 class="text-xl font-bold text-gray-800">Valores a cobrar</h3>
-                <ul class="list-disc pl-6">
-                    <li><span class="font-medium">N1</span> @php echo 'R$ ' . floor(($totalTempos['N1'] / 60) * 100) . ',00' @endphp </li>
-                    <li><span class="font-medium">N2</span> @php echo 'R$ ' . floor(($totalTempos['N2'] / 60) * 200) . ',00' @endphp </li>
-                    <li><span class="font-medium">N3</span> @php echo 'R$ ' . floor(($totalTempos['N3'] / 60) * 300) . ',00' @endphp </li>
+                <ul class="list-disc pl-6" id="valores">    
+                    <li>
+                        <span class="font-medium">N1:</span> 
+                        <span class="valor" data-nivel="N1">@php echo 'R$ ' .  floor(($totalTempos['N1'] / 60) * 100) . ',00'; @endphp</span>
+                    </li>
+                    <li>
+                        <span class="font-medium">N2:</span> 
+                        <span class="valor" data-nivel="N2">R$ {{ floor(($totalTempos['N2'] / 60) * 200) }},00</span>
+                    </li>
+                    <li>
+                        <span class="font-medium">N3:</span> 
+                        <span class="valor" data-nivel="N3">R$ {{ floor(($totalTempos['N3'] / 60) * 300) }},00</span>
+                    </li>                   
+                    <li><span class="font-medium">Dia do gerente:</span> @php echo 'R$ ' . floor(($totalTempos['Dia do Gerente']) * 500) . ',00' @endphp </li>
                     <li>
                         <span class="font-medium">Total Horas:</span>
                         <span id="totalHoras">
@@ -141,7 +178,7 @@
                             </div>
                         </div>
                     @endif
-                @endforeach
+                @endforeach            
             </div>
             <!-- Coluna 2: Dados da API Sigecloud -->
             <div>
@@ -212,8 +249,10 @@
             </div>
     
 </x-app-layout>
+
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+     document.addEventListener('DOMContentLoaded', () => {
         let total = 0;
 
         // Selecionar todos os elementos que contêm os valores finais
@@ -227,43 +266,197 @@
 
         // Atualizar o total na página
         document.getElementById('total').textContent = `R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-        // Chama a função para calcular o total geral depois de atualizar o total
-        calcularTotalGeral();
     });
+
+    function atualizarTotalGeral() {
+        // Seleciona todos os elementos com a classe 'valor'
+        const valores = document.querySelectorAll('.valor');
+
+        const n1 = parseFloat(document.querySelector('[data-nivel="N1"]').textContent.replace('R$', '').replace(',', '.')) || 0;
+        const n2 = parseFloat(document.querySelector('[data-nivel="N2"]').textContent.replace('R$', '').replace(',', '.')) || 0;
+        const n3 = parseFloat(document.querySelector('[data-nivel="N3"]').textContent.replace('R$', '').replace(',', '.')) || 0;
+        const diaGerente = parseFloat(document.querySelector('[data-nivel="DG"]').textContent.replace('R$', '').replace(',', '.')) || 0;
+
+        let total = 0;
+
+        // Selecionar todos os elementos que contêm os valores finais
+        document.querySelectorAll('.valor-final').forEach(element => {
+            const valorText = element.textContent.match(/R\$ ([\d.,]+)/);
+            if (valorText) {
+                const valor = parseFloat(valorText[1].replace('.', '').replace(',', '.'));
+                total += valor;
+            }
+        });
+
+        const totalPedidos = total;
+
+        // Soma os valores
+        const totalGeral = (n1 + n2 + n3)*100 + totalPedidos;
+
+        // Formata o total geral como moeda (R$ 0,00)
+        const totalGeralFormatado = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+
+        // Atualiza o elemento do Total Geral
+        const totalGeralElement = document.getElementById('totalGeral');
+        totalGeralElement.textContent = totalGeralFormatado;
+
+        console.log('Total Pedidos:', totalPedidos);
+        console.log('Total Geral Atualizado:', totalGeralFormatado);
+    }
+
+    atualizarTotalGeral();
+   
+    document.addEventListener("DOMContentLoaded", function() {
+        // Captura os inputs de tempo
+        const tempoInputs = document.querySelectorAll('.tempo-input');
+        
+        tempoInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const ordemNumero = this.getAttribute('data-ordem');
+                const novoTempo = parseFloat(this.value);
+                
+                // Aqui você pode atualizar o valor no array $totalTempos com AJAX ou formulário
+                // No exemplo abaixo, estou apenas exibindo uma mensagem de log
+                console.log(`Ordem ${ordemNumero} novo tempo: ${novoTempo} minutos`);
+                
+                // Aqui seria o momento de calcular o novo total geral ou fazer a atualização da tela
+                atualizarTotais();
+            });
+        });
+    });
+
+    // Função para atualizar os totais na interface (isso é apenas um exemplo)
+    function atualizarTotais() {
+        let totalHoras = 0;
+        document.querySelectorAll('.tempo-input').forEach(input => {
+            totalHoras += parseFloat(input.value);
+        });
+         // Chame a função sempre que houver alteração nos valores
+        atualizarTotalGeral();
+
+
+        // Exibindo o total de horas atualizado
+        document.getElementById('totalHoras').innerText = `R$ ${Math.floor(totalHoras * 100)},00`;
+    }
+
 </script>
 
 <script>
-    function calcularTotalGeral() {
-        // Obtém os valores dos elementos
-        const totalHoras = document.getElementById("totalHoras").textContent.trim();
-        const totalPedidos = document.getElementById("total").textContent.trim();
+    function atualizarDadosAntesDeEnviar() {
+        // Atualiza os campos com os dados mais recentes
 
-        // Função para converter "R$ X.XXX,XX" para número
-        function moedaParaNumero(valor) {
-            return parseFloat(
-                valor
-                    .replace("R$", "") // Remove "R$"
-                    .replace(".", "")  // Remove os pontos de milhar
-                    .replace(",", ".") // Substitui a vírgula decimal por ponto
-                    .trim()
-            );
+        // Filtra ordens de serviço com status 'Finalizado'
+        var ordensServico = {!! json_encode(collect($ordensServico)->filter(function($ordem) { return $ordem['status'] === 'Finalizado'; })) !!};
+        document.getElementById('ordensServico').value = JSON.stringify(ordensServico);
+
+        // Filtra dados Sigecloud com status 'Pedido' ou 'Pedido Nao Faturado'
+        var dadosSigecloud = {!! json_encode(collect($dadosSigecloud)->filter(function ($pedido) { return $pedido['StatusSistema'] === 'Pedido' || $pedido['StatusSistema'] === 'Pedido Nao Faturado'; })) !!};
+        document.getElementById('dadosSigecloud').value = JSON.stringify(dadosSigecloud);
+
+        // Atualiza o total de tempos
+        var totalTempos = {!! json_encode(collect($totalTempos)) !!};
+        document.getElementById('totalTempos').value = JSON.stringify(totalTempos);
+    
+        // Obtém os tempos alterados da interface
+        const ordensAtualizadas = [];
+        document.querySelectorAll('.tempo-input').forEach(input => {
+            const numeroOrdem = parseInt(input.dataset.ordem);
+            const tempoLido = parseFloat(input.value) * 60; // Converte de horas para minutos
+            const classe = input.dataset.classe;
+
+            // Atualiza os tempos nas ordens
+            ordensAtualizadas.push({
+                numero_ordem: numeroOrdem,
+                tempo_lido: tempoLido,
+                classe: classe
+            });
+        });
+
+        // Recalcula os totais por nível (N1, N2, N3, etc.)
+        const totalTemposAtualizados = {
+            N1: 0,
+            N2: 0,
+            N3: 0,
+            "Dia do Gerente": 0,
+            "Sem Tempo": [],
+            ordens: ordensAtualizadas
+        };
+
+        ordensAtualizadas.forEach(ordem => {
+            if (ordem.classe in totalTemposAtualizados) {
+                totalTemposAtualizados[ordem.classe] += ordem.tempo_lido;
+            }
+        });
+
+        // Atualiza os valores nos campos hidden
+        document.getElementById('ordensServico1').value = JSON.stringify(ordensAtualizadas);
+
+        // Atualiza o campo hidden com o totalTempos atualizado
+        document.getElementById('totalTempos1').value = JSON.stringify(totalTemposAtualizados);
+
+    }
+</script>
+
+<script>
+    // Detecta a mudança no input de tempo
+    document.querySelectorAll('.tempo-input').forEach(input => {
+        input.addEventListener('input', function() {
+            // Pega o número da ordem e o novo valor do tempo
+            const numeroOrdem = this.dataset.ordem;
+            const novoTempo = parseFloat(this.value); // Valor em minutos
+
+            // Calcula a diferença
+            const tempoAnterior = parseFloat(this.defaultValue); // O valor original antes de mudar
+            const diferencaTempo = tempoAnterior - novoTempo;
+
+            // Atualiza os tempos totais (N1, N2, N3)
+            if (diferencaTempo !== 0) {
+                // Identifica qual nível o tempo pertence (esse exemplo assume que você sabe a qual nível pertence a ordem)
+                let nivel = this.dataset.classe; // Função que retorna o nível correspondente à ordem
+
+                if (nivel) {
+                    // Atualiza o valor do tempo para o nível correto
+                    let tempoElemento = document.querySelector(`.tempo[data-nivel="${nivel}"]`);
+                    if (tempoElemento) {
+                        let tempoAtual = parseFloat(tempoElemento.textContent);
+                        tempoElemento.textContent = (tempoAtual - diferencaTempo).toFixed(2); // Atualiza o valor do tempo no nível
+                    }
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.tempo-input').forEach(input => {
+    input.addEventListener('input', function() {
+        const nivel = this.dataset.classe; // Obtém o nível (N1, N2, N3)
+        const novoTempo = parseFloat(this.value) * 60; // Converte horas de volta para minutos
+        const tempoAnterior = parseFloat(this.defaultValue) * 60; // Valor original em minutos
+        const diferencaTempo = novoTempo - tempoAnterior;
+         // Logs para inspeção
+         console.log("Nível:", nivel);
+        console.log("Novo Tempo (minutos):", novoTempo);
+        console.log("Tempo Anterior (minutos):", tempoAnterior);
+        console.log("Diferença de Tempo (minutos):", diferencaTempo);
+
+        // Atualizar o valor da classe correspondente
+        if (nivel) {
+            let valorElemento = document.querySelector(`.valor[data-nivel="${nivel}"]`);
+            if (valorElemento) {
+                let valorAtual = parseFloat(valorElemento.textContent.replace('R$', '').replace(',', ''));
+                let fator = 0;
+                console.log("Valor atual:", valorAtual);
+                if (nivel === 'N1') fator = 100;
+                if (nivel === 'N2') fator = 200;
+                if (nivel === 'N3') fator = 300;
+
+                const novoValor = valorAtual/100 + (diferencaTempo / 60) * fator;
+                valorElemento.textContent = `R$ ${Math.floor(novoValor)},00`;
+            }
         }
 
-        // Converte os valores para números
-        const horasNumerico = moedaParaNumero(totalHoras);
-        const pedidosNumerico = moedaParaNumero(totalPedidos);
+        // Atualizar o valor padrão do input
+        this.defaultValue = novoTempo / 60;
+    });
+});
 
-        // Calcula o total geral
-        const totalGeral = horasNumerico + pedidosNumerico;
-
-        // Formata o número para o formato de moeda brasileiro
-        const totalGeralFormatado = new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        }).format(totalGeral);
-        
-        // Atualiza o valor no HTML
-        document.getElementById("totalGeral").textContent = totalGeralFormatado;
-    }
 </script>

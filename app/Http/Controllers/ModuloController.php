@@ -13,7 +13,7 @@ class ModuloController extends Controller
     public function index()
     {
         $modulos = Modulo::all();
-        return view('modulos.index', compact('modulos'));  // Ajuste a view conforme necessário
+        return view('Modulos.index', compact('modulos'));  // Ajuste a view conforme necessário
     }
 
     // Mostra o formulário para criar um novo módulo
@@ -41,7 +41,7 @@ class ModuloController extends Controller
     public function edit($id)
     {
         $modulo = Modulo::findOrFail($id);
-        return view('modulos.edit', compact('modulo'));  // Ajuste a view conforme necessário
+        return view('Modulos.edit', compact('modulo'));  // Ajuste a view conforme necessário
     }
 
     // Atualiza um módulo

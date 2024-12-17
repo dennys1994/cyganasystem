@@ -252,13 +252,13 @@
                 <ul class="relatorio-lista">
                     <li class="relatorio-lista-item">Total de ordens: {{ count($ordensServico) }} ordens</li>
                     @if($totalTempos['N1'] != 0)
-                        <li class="relatorio-lista-item">Tempo Nível 1 (N1): @php echo $totalTempos['N1']/60 @endphp Horas</li>
+                        <li class="relatorio-lista-item">Tempo Nível 1 (N1): @php echo number_format(($totalTempos1['N1']/60), 2, ',', '.') @endphp Horas</li>
                     @endif
                     @if($totalTempos['N2'] != 0)
-                        <li class="relatorio-lista-item">Tempo Nível 2 (N2): @php echo $totalTempos['N2']/60 @endphp Horas</li>
+                        <li class="relatorio-lista-item">Tempo Nível 2 (N2): @php echo number_format(($totalTempos1['N2']/60), 2, ',', '.') @endphp Horas</li>
                     @endif
                     @if($totalTempos['N3'] != 0)
-                        <li class="relatorio-lista-item">Tempo Nível 3 (N3): @php echo $totalTempos['N3']/60 @endphp Horas</li>
+                        <li class="relatorio-lista-item">Tempo Nível 3 (N3): @php echo number_format(($totalTempos1['N3']/60), 2, ',', '.')  @endphp Horas</li>
                     @endif
                 </ul>
         
@@ -273,24 +273,30 @@
                     </thead>
                     <tbody>
                         <!-- Valores a Cobrar -->
-                        @if($totalTempos['N1'] != 0)
+                        @if($totalTempos1['N1'] != 0)
                             <tr>
                                 <td><strong>N1</strong></td>
-                                <td style="text-align: right;">R$ {{ number_format(($totalTempos['N1']/60) * 100, 2, ',', '.') }}</td>
+                                <td style="text-align: right;">R$ {{ number_format(($totalTempos1['N1']/60) * 100, 2, ',', '.') }}</td>
                             </tr>
                         @endif
-                        @if($totalTempos['N2'] != 0)
+                        @if($totalTempos1['N2'] != 0)
                             <tr>
                                 <td><strong>N2</strong></td>
-                                <td style="text-align: right;">R$ {{ number_format(($totalTempos['N2']/60) * 200, 2, ',', '.') }}</td>
+                                <td style="text-align: right;">R$ {{ number_format(($totalTempos1['N2']/60) * 200, 2, ',', '.') }}</td>
                             </tr>
                         @endif
-                        @if($totalTempos['N3'] != 0)
+                        @if($totalTempos1['N3'] != 0)
                             <tr>
                                 <td><strong>N3</strong></td>
-                                <td style="text-align: right;">R$ {{ number_format(($totalTempos['N3']/60) * 300, 2, ',', '.') }}</td>
+                                <td style="text-align: right;">R$ {{ number_format(($totalTempos1['N3']/60) * 300, 2, ',', '.') }}</td>
                             </tr>
                         @endif
+                        @if($totalTempos['Dia do Gerente'] != 0)
+                        <tr>
+                            <td><strong>Dia do Gerente</strong></td>
+                            <td style="text-align: right;">R$ {{ number_format(($totalTempos['Dia do Gerente']) * 500, 2, ',', '.') }}</td>
+                        </tr>
+                    @endif
                         <!-- Total de Pedidos -->
                         @php
                             $totalPedidos = 0;
@@ -313,7 +319,7 @@
                         <tr>
                             <td><strong>Total Geral:</strong></td>
                             <td style="text-align: right; font-weight: bold;">
-                                R$ {{ number_format((($totalTempos['N1']/60)*100 + ($totalTempos['N2']/60)*200 + ($totalTempos['N3']/60)*300) + $totalPedidos, 2, ',', '.') }}
+                                R$ {{ number_format((($totalTempos1['N1']/60)*100 + ($totalTempos1['N2']/60)*200 + ($totalTempos1['N3']/60)*300) + $totalPedidos + $totalTempos['Dia do Gerente'] * 500 , 2, ',', '.') }}
                             </td>
                         </tr>                            
                     </tbody>

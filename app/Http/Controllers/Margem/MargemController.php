@@ -108,7 +108,7 @@ class MargemController extends Controller
                 $margem = $avista - ($frete + $custo) - (0.03 * $avista);
                 $margemPorcentagem = ((($custo / ($custo + $margem)) - 1) * -100);
                 
-                return view('modulos.margem.calcular_preco', [
+                return view('Modulos.Margem.calcular_preco', [
                     'categorias' => CategoriaMargem::all(),
                     'resultados' => [
                         'custo' => number_format($custo, 2, ',', '.'),
