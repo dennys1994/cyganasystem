@@ -33,7 +33,7 @@
             @if(Auth::check() && Auth::user()->role_id == 1)
                 <!-- Card 5: Editar Categoria -->
                 <div class="bg-white p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                    <a href="{{ route('relatorio.clientes') }}" class="block text-center"> <!-- Substitua "1" pelo ID da categoria que você quer editar -->
+                    <a href="{{ route('relatorio.clientes') }}" class="block text-center">
                         <div class="flex justify-center items-center mb-4">
                             <!-- Heroicon SVG (Example) -->
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10">

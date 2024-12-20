@@ -208,9 +208,12 @@ class RelatorioFechamentoController extends Controller
             $urlSigecloud = 'https://api.sigecloud.com.br/request/Pedidos/Pesquisar';
 
             // Montando os parâmetros manualmente, sem que os dois pontos sejam escapados
-            $dataInicial = $dataInicio . 'T00:00:00Z';
-            $dataFinal = $dataFim . 'T23:59:59Z';
+            // Extrair o ano da data inicial
+            $ano = substr($dataInicio, 0, 4);
 
+            // Criar uma nova data inicial para o primeiro dia do ano
+            $dataInicial = $ano . "-01-01T00:00:00Z";
+            $dataFinal = $dataFim . 'T23:59:59Z';
             // A URL completa que você já montou
             $urlCompleta = $urlSigecloud . '?cpf_cnpj=' . $cnpj . '&dataInicial=' . $dataInicial . '&dataFinal=' . $dataFinal;
 

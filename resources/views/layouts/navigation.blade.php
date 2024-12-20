@@ -129,12 +129,46 @@
                                         <div>
                                             <a href="{{route ('financeiro.index')}}" class="font-semibold text-gray-900">
                                                 Financeiro
-                                                <p class="mt-1 text-gray-600">Funções ligadas a financeiro</p>
+                                                <p class="mt-1 text-gray-600">Funções ligadas a financeiro.</p>
                                             </a>                                        
                                         </div>  
                                     </a>                         
                                 </div>                                       
-                                <!-- Final 1° item -->                                                                             
+                                <!-- Final 1° item -->
+                                <!-- 2° item -->
+                                <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
+                                    <a href="{{route ('aplicativo.index')}}" >
+                                        <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                                            </svg>                                          
+                                        </div>
+                                        <div>
+                                            <a href="{{route ('aplicativo.index')}}" class="font-semibold text-gray-900">
+                                                Aplicativo Lotus Squad
+                                                <p class="mt-1 text-gray-600">Funções ligadas ao aplicativo.</p>
+                                            </a>                                        
+                                        </div>  
+                                    </a>                         
+                                </div>                                       
+                                <!-- Final 2° item -->  
+                                <!-- 2° item -->
+                                <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
+                                    <a href="{{route ('almoxarifado.functions')}}" >
+                                        <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                                              </svg>                                              
+                                        </div>
+                                        <div>
+                                            <a href="{{route ('almoxarifado.functions')}}" class="font-semibold text-gray-900">
+                                                Almoxarifado 
+                                                <p class="mt-1 text-gray-600">Funções ligadas ao Almoxarifado.</p>
+                                            </a>                                        
+                                        </div>  
+                                    </a>                         
+                                </div>                                       
+                                <!-- Final 2° item -->                                                                                
                             </div>
                         </div>                                   
                     </div>                          
@@ -214,6 +248,7 @@
             </button>
             <div x-show="openFuncoes" class="pl-4 space-y-1" x-cloak>
                 <a href="{{route ('financeiro.index')}}" class="block text-sm text-gray-200 hover:bg-gray-100">{{ __('Financeiro') }}</a>                   
+                <a href="{{route ('almoxarifado.functions')}}" class="block text-sm text-gray-200 hover:bg-gray-100">{{ __('Almoxarifado') }}</a>    
             </div>
             
             <button @click="openPerfil = !openPerfil" class="block w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-100 hover:text-black">
