@@ -30,6 +30,7 @@
                         <th scope="col" class="px-6 py-3">Setor</th>
                         <th scope="col" class="px-6 py-3">Função</th>
                         <th scope="col" class="px-6 py-3">Tamanho</th>
+                        <th scope="col" class="px-6 py-3">Quantidade series</th>
                         <th scope="col" class="px-6 py-3 w-64">Ações</th> <!-- Altere a largura da coluna -->
                     </tr>
                 </thead>
@@ -43,6 +44,13 @@
                             <td class="px-6 py-4">{{ $patrimonio->setorPat->nome ?? '-' }}</td>
                             <td class="px-6 py-4">{{ $patrimonio->funcaoPat->nome ?? '-' }}</td>
                             <td class="px-6 py-4">{{ $patrimonio->tamanhoPat->tamanho ?? '-' }}</td>
+                            <td class="px-6 py-4">
+                                @php
+                                    $series = $patrimonio->series; // JSON armazenado na variável
+                                    $seriesArray = json_decode($series, true);
+                                    echo count($seriesArray);
+                                @endphp
+                            </td>
                             <td class="px-6 py-4 flex space-x-2"> <!-- Usando flexbox para alinhar os botões -->
                                 <a href="{{ route('almoxarifado.edit', $patrimonio->id) }}" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Editar</a>
                                 <form action="{{ route('almoxarifado.destroy', $patrimonio->id) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este patrimônio?');">

@@ -8,7 +8,7 @@ use App\Http\Controllers\Margem\MargemController;
 use App\Http\Controllers\Modulos\RelatorioFechamentoController;
 use App\Http\Controllers\Modulos\BandeiraController;
 use App\Http\Controllers\Modulos\AlmoxarifadoController;
-
+use App\Http\Controllers\Modulos\ShoppingListController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -223,6 +223,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/patrimonio/list', [AlmoxarifadoController::class, 'listarPatrimonios'])->name('patrimonio.list');
         //end Grupo
 
+    });
+
+     //Rota Almoxarifado        
+     Route::middleware([CheckModuleAccess::class . ':Compras'])->group(function () {
+        Route::prefix('Compras')->group(function () {
+            Route::get('/funcoes', function () {
+                return view('Modulos.Compras.functions');
+            })->name('compras.functions');                
+        });
+        Route::resource('shopping_lists', ShoppingListController::class)->except(['show', 'edit', 'update']);
+        Route::get('/shopping-lists/pdf', [ShoppingListController::class, 'generatePdf'])->name('shopping_lists.generate_pdf');
     });
 
 
