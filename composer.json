@@ -10,7 +10,8 @@
         "barryvdh/laravel-dompdf": "^3.0",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
-        "milon/barcode": "^11.0"
+        "milon/barcode": "^11.0",
+        "vlucas/phpdotenv": "^5.6"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

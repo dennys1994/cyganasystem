@@ -9,6 +9,7 @@ use App\Http\Controllers\Modulos\RelatorioFechamentoController;
 use App\Http\Controllers\Modulos\BandeiraController;
 use App\Http\Controllers\Modulos\AlmoxarifadoController;
 use App\Http\Controllers\Modulos\ShoppingListController;
+use App\Http\Controllers\Modulos\EmpresaController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -236,8 +237,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/shopping-lists/pdf', [ShoppingListController::class, 'generatePdf'])->name('shopping_lists.generate_pdf');
     });
 
+    Route::middleware([CheckModuleAccess::class . ':BotPixel'])->group(function () {
+        // Rotas CRUD para DadosDigisac
+        Route::get('/dados-digisac', [EmpresaController::class, 'index_digisac'])->name('dados-digisac.index');
+        Route::get('/dados-digisac/create', [EmpresaController::class, 'create_digisac'])->name('dados-digisac.create');
+        Route::post('/dados-digisac', [EmpresaController::class, 'store_digisac'])->name('dados-digisac.store');
+        Route::get('/dados-digisac/{id}/edit', [EmpresaController::class, 'edit_digisac'])->name('dados-digisac.edit');
+        Route::put('/dados-digisac/{id}', [EmpresaController::class, 'update_digisac'])->name('dados-digisac.update');
+        Route::delete('/dados-digisac/{id}', [EmpresaController::class, 'destroy_digisac'])->name('dados-digisac.destroy');
 
+        
+        Route::resource('empresa', EmpresaController::class);
 
+    });
+    
 
     
 });
